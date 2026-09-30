@@ -15,8 +15,8 @@
                     fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
                     colors: {
                         brand: { 50: '#eff6ff', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a', 950: '#0f172a' },
-                        darkglass: 'rgba(15, 23, 42, 0.75)',
-                        lightglass: 'rgba(255, 255, 255, 0.85)'
+                        darkglass: 'rgba(15, 23, 42, 0.85)',
+                        lightglass: 'rgba(255, 255, 255, 0.9)'
                     }
                 }
             }
@@ -26,24 +26,29 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
         body { overflow: hidden; margin: 0; }
         #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 0; }
         
-        .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15); }
         .dark .glass { border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
         .leaflet-popup-content-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
         .leaflet-popup-tip-container { display: none; }
         .leaflet-popup-content { margin: 0 !important; width: 300px !important; }
 
         path.leaflet-interactive { transition: stroke-width 0.3s ease, stroke 0.3s ease, fill-opacity 0.3s ease; }
+
+        /* Kelas untuk Hide Panel Kiri & Kanan */
+        #leftSidebar.hidden-panel { transform: translateX(-110%); }
+        #rightPanel.hidden-panel { transform: translateX(110%); }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-800 dark:bg-brand-950 dark:text-gray-200 transition-colors duration-500 selection:bg-brand-500 selection:text-white">
+<body class="bg-gray-100 text-gray-800 dark:bg-brand-950 dark:text-gray-200 transition-colors duration-500 selection:bg-brand-500 selection:text-white font-sans">
 
+    <!-- Loading Screen -->
     <div id="loadingScreen" class="fixed inset-0 bg-brand-950 z-[9999] flex flex-col items-center justify-center transition-all duration-700">
         <div class="relative w-24 h-24 mb-6">
             <div class="absolute inset-0 border-4 border-brand-900 rounded-full"></div>
@@ -54,75 +59,119 @@
         <p class="text-xs text-gray-500 mt-2">Bina Marga Nasional</p>
     </div>
 
+    <!-- Peta Fullscreen -->
     <div id="map"></div>
 
-    <!-- Floating Navbar dengan Judul Baru -->
-    <nav class="absolute top-6 left-1/2 -translate-x-1/2 z-[500] glass bg-lightglass dark:bg-darkglass px-6 py-3 rounded-full flex items-center gap-5 shadow-2xl transition-all">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-600 to-blue-400 flex items-center justify-center text-white shadow-lg shrink-0">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+    <!-- Tombol Kontrol Peta (Kamera & Reset) di Pojok Kanan Atas -->
+    <div class="absolute top-6 right-6 z-[400] flex items-center gap-3">
+        <button id="resetViewBtn" class="glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-2xl shadow-xl font-bold text-xs transition-all flex items-center gap-2" title="Kembalikan pandangan ke seluruh Jawa Barat">
+            <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+            Reset Kamera
+        </button>
+        <!-- Tombol Unhide Sidebar Kiri (Muncul pas panel kiri di-hide) -->
+        <button id="showLeftBtn" class="hidden glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-2xl shadow-xl transition-all" title="Buka Menu Kiri">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+        </button>
+    </div>
+
+    <!-- SIDEBAR KIRI (Dilengkapi Tombol Hide) -->
+    <aside id="leftSidebar" class="absolute top-6 left-6 bottom-24 w-[380px] glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden transition-transform duration-500">
+        
+        <!-- Header Sidebar -->
+        <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between bg-white/30 dark:bg-gray-900/30">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-blue-400 flex items-center justify-center text-white shadow-md shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <div>
+                    <h1 class="font-extrabold tracking-tight text-xs text-gray-900 dark:text-white uppercase leading-snug">Identifikasi Risiko Jembatan Jabar</h1>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Bina Marga • 2026</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-1.5">
+                <button id="themeToggle" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-brand-500 dark:text-gray-400 transition-colors shrink-0 shadow-sm" title="Ubah Tema">
+                    <svg id="icon-dark" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+                    <svg id="icon-light" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </button>
+                <!-- Tombol Hide Kiri -->
+                <button id="hideLeftBtn" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-red-500 dark:text-gray-400 transition-colors shrink-0 shadow-sm" title="Sembunyikan Panel">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Search & Filter Layer -->
+        <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50 space-y-3">
+            <div class="relative">
+                <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" id="searchInput" placeholder="Cari nama jembatan / ruas..." class="w-full pl-9 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/50 border border-transparent dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs text-gray-800 dark:text-gray-200 transition-all placeholder-gray-400">
             </div>
             <div>
-                <h1 class="font-extrabold tracking-tight text-xs md:text-sm text-gray-900 dark:text-white uppercase leading-none">Dashboard Identifikasi Risiko Jembatan Jawa Barat 2026</h1>
-                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">Direktorat Jenderal Bina Marga</p>
+                <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Layer Analisis Risiko</h3>
+                <div class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1" id="filterContainer"></div>
             </div>
         </div>
-        <div class="w-px h-6 bg-gray-300 dark:bg-gray-700"></div>
-        <button id="themeToggle" class="text-gray-500 hover:text-brand-500 dark:text-gray-400 dark:hover:text-brand-400 transition-colors shrink-0">
-            <svg id="icon-dark" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
-            <svg id="icon-light" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-        </button>
-    </nav>
 
-    <aside class="absolute top-24 left-6 bottom-24 w-[360px] glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden transform transition-transform">
-        <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50">
-            <div class="relative mb-4">
-                <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="searchInput" placeholder="Cari jembatan / ruas..." class="w-full pl-9 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/50 border border-transparent dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-800 dark:text-gray-200 transition-all placeholder-gray-400">
-            </div>
-            <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Layer Analisis Risiko</h3>
-            <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto" id="filterContainer"></div>
-        </div>
+        <!-- List Jembatan -->
         <div id="bridgeList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
     </aside>
 
-    <section class="absolute top-24 right-6 w-80 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col p-5 space-y-4">
-        <div>
-            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Ringkasan Ancaman</h2>
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <div class="bg-gray-100/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 text-center">
-                    <div class="text-[10px] text-gray-500 font-bold uppercase">Titik Tampil</div>
-                    <div id="stat-total" class="text-2xl font-black text-brand-600 dark:text-brand-400">0</div>
-                </div>
-                <div class="bg-rose-50/50 dark:bg-rose-900/20 p-3 rounded-2xl border border-rose-200/50 dark:border-rose-900/30 text-center relative overflow-hidden">
-                    <div class="absolute -right-2 -top-2 w-10 h-10 bg-rose-500/20 rounded-full blur-xl"></div>
-                    <div class="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase relative z-10">Multi-Risiko</div>
-                    <div id="stat-multi" class="text-2xl font-black text-rose-600 dark:text-rose-400 relative z-10">0</div>
-                </div>
+    <!-- PANEL KANAN: Statistik & Chart (Dilengkapi Tombol Hide) -->
+    <section id="rightPanel" class="absolute top-24 right-6 w-80 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col p-5 space-y-4 transition-transform duration-500">
+        <div class="flex justify-between items-center border-b border-gray-200/50 dark:border-gray-700/50 pb-2">
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Ringkasan Ancaman</h2>
+            <!-- Tombol Hide Kanan -->
+            <button id="hideRightBtn" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg" title="Sembunyikan Panel">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 mb-2">
+            <div class="bg-gray-100/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 text-center">
+                <div class="text-[10px] text-gray-500 font-bold uppercase">Titik Tampil</div>
+                <div id="stat-total" class="text-2xl font-black text-brand-600 dark:text-brand-400">0</div>
             </div>
-            <div class="relative w-full h-36">
-                <canvas id="riskChart"></canvas>
+            <div id="cardMultiRisk" class="bg-rose-50/50 dark:bg-rose-900/20 p-3 rounded-2xl border border-rose-200/50 dark:border-rose-900/30 text-center relative overflow-hidden cursor-pointer hover:scale-105 transition-transform" title="Klik untuk filter Multi-Risiko">
+                <div class="absolute -right-2 -top-2 w-10 h-10 bg-rose-500/20 rounded-full blur-xl"></div>
+                <div class="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase relative z-10">Multi-Risiko</div>
+                <div id="stat-multi" class="text-2xl font-black text-rose-600 dark:text-rose-400 relative z-10">0</div>
             </div>
         </div>
+        <div class="relative w-full h-36">
+            <canvas id="riskChart"></canvas>
+        </div>
         <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-3">
-            <div id="statList" class="space-y-2 text-[11px] font-medium max-h-40 overflow-y-auto pr-2"></div>
+            <div id="statList" class="space-y-2 text-[11px] font-medium max-h-36 overflow-y-auto pr-2"></div>
         </div>
     </section>
 
-    <button id="toggleTableBtn" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] glass bg-gray-900/90 hover:bg-black dark:bg-white/10 dark:hover:bg-white/20 text-white shadow-2xl px-8 py-3 rounded-full font-bold text-sm transition-all flex items-center gap-2 border border-white/10">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-        Tampilkan Database
+    <!-- Tombol Unhide Panel Kanan (Muncul pas panel kanan di-hide) -->
+    <button id="showRightBtn" class="hidden absolute top-24 right-6 z-[400] glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-2xl shadow-xl transition-all" title="Buka Statistik">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
     </button>
 
+    <!-- Tombol Buka Tabel Bawah -->
+    <button id="toggleTableBtn" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] glass bg-gray-900/90 hover:bg-black dark:bg-white/10 dark:hover:bg-white/20 text-white shadow-2xl px-8 py-3 rounded-full font-bold text-sm transition-all flex items-center gap-2 border border-white/10">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+        Tampilkan Database Tabel
+    </button>
+
+    <!-- Tabel Data (Slide Up) -->
     <div id="tableContainer" class="absolute bottom-6 left-6 right-6 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[1000] transition-transform duration-500 translate-y-[150%] flex flex-col max-h-[350px] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
         <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50">
             <div class="flex items-center gap-3">
                 <div class="w-2 h-6 bg-brand-500 rounded-full"></div>
                 <h3 class="font-extrabold text-sm text-gray-800 dark:text-white">Tabel Atribut Survei Lapangan</h3>
             </div>
-            <button id="closeTableBtn" class="w-8 h-8 flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50 hover:bg-red-500 hover:text-white rounded-full transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-            </button>
+            <div class="flex items-center gap-3">
+                <button id="exportCsvBtn" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Unduh CSV
+                </button>
+                <button id="closeTableBtn" class="w-8 h-8 flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50 hover:bg-red-500 hover:text-white rounded-full transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
         </div>
         <div class="overflow-y-auto flex-1 p-0 relative">
             <table class="w-full text-left text-xs md:text-sm whitespace-nowrap">
@@ -139,6 +188,7 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const LAYER_URL = "https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0";
@@ -157,6 +207,7 @@
         
         let currentFilter = 'all'; 
         let selectedLayer = null;
+        let activeFilteredFeatures = [];
 
         const riskTypes = [
             { id: 'banjir', name: 'Banjir', hex: '#3b82f6', tw: 'bg-blue-500' },
@@ -181,11 +232,11 @@
             let activeRisks = riskTypes.filter(rt => checkRisk(p[rt.id]));
             let riskCount = activeRisks.length;
             
-            let hex = '#22c55e'; // Aman (Hijau)
+            let hex = '#22c55e'; // Aman
             let twClass = 'bg-green-500';
 
             if (riskCount >= 2) {
-                hex = '#e11d48'; // Rose (Multi-Risiko)
+                hex = '#e11d48'; // Rose
                 twClass = 'bg-rose-600';
             } else if (riskCount === 1) {
                 hex = activeRisks[0].hex;
@@ -250,7 +301,7 @@
 
         function applyFilters() {
             const searchVal = document.getElementById('searchInput').value.toLowerCase();
-            const filteredData = globalFeatures.filter(f => {
+            activeFilteredFeatures = globalFeatures.filter(f => {
                 const p = f.properties;
                 const matchText = (p.jembatan || '').toLowerCase().includes(searchVal) || (p.ruas || '').toLowerCase().includes(searchVal);
                 let matchLayer = true;
@@ -262,7 +313,7 @@
                 }
                 return matchText && matchLayer;
             });
-            updateDashboard(filteredData);
+            updateDashboard(activeFilteredFeatures);
         }
         document.getElementById('searchInput').addEventListener('input', applyFilters);
 
@@ -471,6 +522,72 @@
             });
         }
 
+        // LOGIKA TOMBOL HIDE & SHOW PANEL KIRI & KANAN
+        const leftSidebar = document.getElementById('leftSidebar');
+        const rightPanel = document.getElementById('rightPanel');
+        const hideLeftBtn = document.getElementById('hideLeftBtn');
+        const showLeftBtn = document.getElementById('showLeftBtn');
+        const hideRightBtn = document.getElementById('hideRightBtn');
+        const showRightBtn = document.getElementById('showRightBtn');
+
+        hideLeftBtn.addEventListener('click', () => {
+            leftSidebar.classList.add('hidden-panel');
+            showLeftBtn.classList.remove('hidden');
+        });
+        showLeftBtn.addEventListener('click', () => {
+            leftSidebar.classList.remove('hidden-panel');
+            showLeftBtn.classList.add('hidden');
+        });
+
+        hideRightBtn.addEventListener('click', () => {
+            rightPanel.classList.add('hidden-panel');
+            showRightBtn.classList.remove('hidden');
+        });
+        showRightBtn.addEventListener('click', () => {
+            rightPanel.classList.remove('hidden-panel');
+            showRightBtn.classList.add('hidden');
+        });
+
+        document.getElementById('resetViewBtn').addEventListener('click', () => {
+            map.setView([-6.8, 107.4], 9, { animate: true, duration: 1 });
+        });
+
+        document.getElementById('cardMultiRisk').addEventListener('click', () => {
+            currentFilter = 'multi';
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                b.classList.remove('bg-gray-800', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'shadow-md');
+                b.setAttribute('data-active', 'false');
+            });
+            const btnMulti = document.querySelector('[data-filter="multi"]');
+            if(btnMulti) {
+                btnMulti.setAttribute('data-active', 'true');
+                btnMulti.classList.add('bg-rose-500', 'text-white');
+            }
+            applyFilters();
+        });
+
+        document.getElementById('exportCsvBtn').addEventListener('click', () => {
+            if (activeFilteredFeatures.length === 0) {
+                alert('Tidak ada data untuk diexport!');
+                return;
+            }
+            let csvContent = "data:text/csv;charset=utf-8,No Jembatan,Nama Jembatan,Ruas,Risiko Terdeteksi\n";
+            activeFilteredFeatures.forEach(f => {
+                const p = f.properties;
+                const jbt = parseJembatan(p.jembatan);
+                const profile = getRiskProfile(p);
+                const risks = profile.activeRisks.map(r => r.name).join('; ');
+                csvContent += `"${jbt.no}","${jbt.nama}","${p.ruas || '-'}","${risks || 'Aman'}"\n`;
+            });
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "data_risiko_jembatan_jabar.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+
         const tableContainer = document.getElementById('tableContainer');
         document.getElementById('toggleTableBtn').addEventListener('click', () => tableContainer.classList.remove('translate-y-[150%]'));
         document.getElementById('closeTableBtn').addEventListener('click', () => tableContainer.classList.add('translate-y-[150%]'));
@@ -482,13 +599,7 @@
             document.getElementById('icon-dark').classList.toggle('hidden');
             if (isDark) { map.removeLayer(lightBasemap); darkBasemap.addTo(map); } 
             else { map.removeLayer(darkBasemap); lightBasemap.addTo(map); }
-            updateAnalytics(globalFeatures.filter(f => {
-                if (currentFilter === 'all') return true;
-                const profile = getRiskProfile(f.properties);
-                if (currentFilter === 'multi') return profile.riskCount >= 2;
-                if (currentFilter === 'aman') return profile.riskCount === 0;
-                return profile.activeRisks.some(r => r.id === currentFilter);
-            }));
+            updateAnalytics(activeFilteredFeatures);
         });
 
         loadData();
