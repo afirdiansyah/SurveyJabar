@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Identifikasi Risiko Jembatan Jawa Barat 2026</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#eff6ff', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a', 950: '#0f172a' },
+                        darkglass: 'rgba(15, 23, 42, 0.75)',
+                        lightglass: 'rgba(255, 255, 255, 0.85)'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        body { overflow: hidden; margin: 0; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 0; }
+        
+        .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.2); }
+        .dark .glass { border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .leaflet-popup-content-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+        .leaflet-popup-tip-container { display: none; }
+        .leaflet-popup-content { margin: 0 !important; width: 300px !important; }
+
+        path.leaflet-interactive { transition: stroke-width 0.3s ease, stroke 0.3s ease, fill-opacity 0.3s ease; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 dark:bg-brand-950 dark:text-gray-200 transition-colors duration-500 selection:bg-brand-500 selection:text-white">
+
+    <div id="loadingScreen" class="fixed inset-0 bg-brand-950 z-[9999] flex flex-col items-center justify-center transition-all duration-700">
+        <div class="relative w-24 h-24 mb-6">
+            <div class="absolute inset-0 border-4 border-brand-900 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-brand-500 rounded-full border-t-transparent animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center font-bold text-brand-500">GIS</div>
+        </div>
+        <h2 class="text-xl font-bold text-white tracking-widest animate-pulse">SINKRONISASI DATA...</h2>
+        <p class="text-xs text-gray-500 mt-2">Bina Marga Nasional</p>
+    </div>
+
+    <div id="map"></div>
+
+    <!-- Floating Navbar dengan Judul Baru -->
+    <nav class="absolute top-6 left-1/2 -translate-x-1/2 z-[500] glass bg-lightglass dark:bg-darkglass px-6 py-3 rounded-full flex items-center gap-5 shadow-2xl transition-all">
+        <div class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-brand-600 to-blue-400 flex items-center justify-center text-white shadow-lg shrink-0">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            </div>
+            <div>
+                <h1 class="font-extrabold tracking-tight text-xs md:text-sm text-gray-900 dark:text-white uppercase leading-none">Dashboard Identifikasi Risiko Jembatan Jawa Barat 2026</h1>
+                <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-1">Direktorat Jenderal Bina Marga</p>
+            </div>
+        </div>
+        <div class="w-px h-6 bg-gray-300 dark:bg-gray-700"></div>
+        <button id="themeToggle" class="text-gray-500 hover:text-brand-500 dark:text-gray-400 dark:hover:text-brand-400 transition-colors shrink-0">
+            <svg id="icon-dark" class="w-5 h-5 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
+            <svg id="icon-light" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+        </button>
+    </nav>
+
+    <aside class="absolute top-24 left-6 bottom-24 w-[360px] glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden transform transition-transform">
+        <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50">
+            <div class="relative mb-4">
+                <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <input type="text" id="searchInput" placeholder="Cari jembatan / ruas..." class="w-full pl-9 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/50 border border-transparent dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-sm text-gray-800 dark:text-gray-200 transition-all placeholder-gray-400">
+            </div>
+            <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Layer Analisis Risiko</h3>
+            <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto" id="filterContainer"></div>
+        </div>
+        <div id="bridgeList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+    </aside>
+
+    <section class="absolute top-24 right-6 w-80 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col p-5 space-y-4">
+        <div>
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Ringkasan Ancaman</h2>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <div class="bg-gray-100/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 text-center">
+                    <div class="text-[10px] text-gray-500 font-bold uppercase">Titik Tampil</div>
+                    <div id="stat-total" class="text-2xl font-black text-brand-600 dark:text-brand-400">0</div>
+                </div>
+                <div class="bg-rose-50/50 dark:bg-rose-900/20 p-3 rounded-2xl border border-rose-200/50 dark:border-rose-900/30 text-center relative overflow-hidden">
+                    <div class="absolute -right-2 -top-2 w-10 h-10 bg-rose-500/20 rounded-full blur-xl"></div>
+                    <div class="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase relative z-10">Multi-Risiko</div>
+                    <div id="stat-multi" class="text-2xl font-black text-rose-600 dark:text-rose-400 relative z-10">0</div>
+                </div>
+            </div>
+            <div class="relative w-full h-36">
+                <canvas id="riskChart"></canvas>
+            </div>
+        </div>
+        <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-3">
+            <div id="statList" class="space-y-2 text-[11px] font-medium max-h-40 overflow-y-auto pr-2"></div>
+        </div>
+    </section>
+
+    <button id="toggleTableBtn" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] glass bg-gray-900/90 hover:bg-black dark:bg-white/10 dark:hover:bg-white/20 text-white shadow-2xl px-8 py-3 rounded-full font-bold text-sm transition-all flex items-center gap-2 border border-white/10">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+        Tampilkan Database
+    </button>
+
+    <div id="tableContainer" class="absolute bottom-6 left-6 right-6 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[1000] transition-transform duration-500 translate-y-[150%] flex flex-col max-h-[350px] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50">
+            <div class="flex items-center gap-3">
+                <div class="w-2 h-6 bg-brand-500 rounded-full"></div>
+                <h3 class="font-extrabold text-sm text-gray-800 dark:text-white">Tabel Atribut Survei Lapangan</h3>
+            </div>
+            <button id="closeTableBtn" class="w-8 h-8 flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50 hover:bg-red-500 hover:text-white rounded-full transition-colors">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+        <div class="overflow-y-auto flex-1 p-0 relative">
+            <table class="w-full text-left text-xs md:text-sm whitespace-nowrap">
+                <thead class="bg-gray-100/80 dark:bg-gray-900/80 sticky top-0 backdrop-blur-md z-10 text-gray-500 dark:text-gray-400 uppercase tracking-wider text-[10px] font-bold">
+                    <tr>
+                        <th class="px-6 py-4">No Jembatan</th>
+                        <th class="px-6 py-4">Nama Jembatan</th>
+                        <th class="px-6 py-4">Ruas</th>
+                        <th class="px-6 py-4">Risiko Terdeteksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="divide-y divide-gray-100/50 dark:divide-gray-800/50"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        const LAYER_URL = "https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0";
+        
+        const map = L.map('map', { zoomControl: false }).setView([-6.8, 107.4], 9);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        const lightBasemap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
+        const darkBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' });
+        darkBasemap.addTo(map);
+
+        let globalFeatures = [];
+        let geojsonLayer;
+        let riskChartInstance = null;
+        window.sliderState = {};
+        
+        let currentFilter = 'all'; 
+        let selectedLayer = null;
+
+        const riskTypes = [
+            { id: 'banjir', name: 'Banjir', hex: '#3b82f6', tw: 'bg-blue-500' },
+            { id: 'longsor', name: 'Longsor', hex: '#f59e0b', tw: 'bg-amber-500' },
+            { id: 'gempabumi', name: 'Gempa Bumi', hex: '#ef4444', tw: 'bg-red-500' },
+            { id: 'cuacaekstrim', name: 'Cuaca Ekstrim', hex: '#a855f7', tw: 'bg-purple-500' },
+            { id: 'odol_bebanberlebih', name: 'ODOL (Beban)', hex: '#f97316', tw: 'bg-orange-500' },
+            { id: 'korosi', name: 'Korosi', hex: '#eab308', tw: 'bg-yellow-500' },
+            { id: 'kualitaskonstruksiyangburuk', name: 'Konstruksi Buruk', hex: '#ec4899', tw: 'bg-pink-500' },
+            { id: 'kerusakanakibatbendaasing', name: 'Benda Asing', hex: '#06b6d4', tw: 'bg-cyan-500' },
+            { id: 'vandalisme', name: 'Vandalisme', hex: '#14b8a6', tw: 'bg-teal-500' }
+        ];
+
+        function parseJembatan(str) {
+            if (!str) return { no: '-', nama: '-' };
+            const match = str.match(/^([\d\.]+)(.*)$/);
+            return match ? { no: match[1].trim(), nama: match[2].trim() } : { no: '-', nama: str };
+        }
+        function checkRisk(val) { return val && (val.toLowerCase() === 'yes' || val === 1 || val === '1'); }
+
+        function getRiskProfile(p) {
+            let activeRisks = riskTypes.filter(rt => checkRisk(p[rt.id]));
+            let riskCount = activeRisks.length;
+            
+            let hex = '#22c55e'; // Aman (Hijau)
+            let twClass = 'bg-green-500';
+
+            if (riskCount >= 2) {
+                hex = '#e11d48'; // Rose (Multi-Risiko)
+                twClass = 'bg-rose-600';
+            } else if (riskCount === 1) {
+                hex = activeRisks[0].hex;
+                twClass = activeRisks[0].tw;
+            }
+
+            return { activeRisks, riskCount, hex, twClass };
+        }
+
+        function buildFilters() {
+            const container = document.getElementById('filterContainer');
+            let html = `
+                <button data-filter="all" class="filter-btn active px-2.5 py-1 text-[10px] font-bold rounded bg-gray-800 dark:bg-white text-white dark:text-gray-900 shadow-md transition-all">Semua</button>
+                <button data-filter="aman" class="filter-btn px-2.5 py-1 text-[10px] font-bold rounded bg-gray-200/50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 hover:bg-green-500 hover:text-white transition-all data-[active=true]:bg-green-500 data-[active=true]:text-white">Aman</button>
+                <button data-filter="multi" class="filter-btn px-2.5 py-1 text-[10px] font-bold rounded bg-gray-200/50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 hover:bg-rose-500 hover:text-white transition-all data-[active=true]:bg-rose-500 data-[active=true]:text-white">Multi Risiko</button>
+            `;
+            riskTypes.forEach(rt => {
+                html += `<button data-filter="${rt.id}" class="filter-btn px-2.5 py-1 text-[10px] font-bold rounded bg-gray-200/50 dark:bg-gray-800/50 text-gray-500 dark:text-gray-400 transition-all hover:text-white" onmouseover="this.style.backgroundColor='${rt.hex}'" onmouseout="if(this.getAttribute('data-active') !== 'true') this.style.backgroundColor=''" data-[active=true] style="--tw-active-bg: ${rt.hex}">${rt.name}</button>`;
+            });
+            container.innerHTML = html;
+
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    document.querySelectorAll('.filter-btn').forEach(b => {
+                        b.classList.remove('bg-gray-800', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'shadow-md');
+                        b.setAttribute('data-active', 'false');
+                        if(!['all','aman','multi'].includes(b.dataset.filter)) b.style.backgroundColor = '';
+                    });
+                    
+                    const target = e.currentTarget;
+                    if (target.dataset.filter === 'all') {
+                        target.classList.add('bg-gray-800', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'shadow-md');
+                    } else {
+                        target.setAttribute('data-active', 'true');
+                        const rt = riskTypes.find(r => r.id === target.dataset.filter);
+                        if(rt) target.style.backgroundColor = rt.hex;
+                        target.classList.add('text-white');
+                    }
+                    
+                    currentFilter = target.dataset.filter;
+                    applyFilters();
+                });
+            });
+        }
+
+        async function loadData() {
+            buildFilters();
+            try {
+                const res = await fetch(`${LAYER_URL}/query?where=1=1&outFields=*&f=geojson`);
+                const data = await res.json();
+                if(data.features) {
+                    globalFeatures = data.features;
+                    applyFilters(); 
+                    const loader = document.getElementById('loadingScreen');
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.remove(), 700);
+                }
+            } catch (err) {
+                document.getElementById('loadingScreen').innerHTML = '<h2 class="text-red-500 font-bold text-xl">KONEKSI GAGAL</h2>';
+            }
+        }
+
+        function applyFilters() {
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const filteredData = globalFeatures.filter(f => {
+                const p = f.properties;
+                const matchText = (p.jembatan || '').toLowerCase().includes(searchVal) || (p.ruas || '').toLowerCase().includes(searchVal);
+                let matchLayer = true;
+                if (currentFilter !== 'all') {
+                    const profile = getRiskProfile(p);
+                    if (currentFilter === 'multi') matchLayer = profile.riskCount >= 2;
+                    else if (currentFilter === 'aman') matchLayer = profile.riskCount === 0;
+                    else matchLayer = checkRisk(p[currentFilter]);
+                }
+                return matchText && matchLayer;
+            });
+            updateDashboard(filteredData);
+        }
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+        function updateDashboard(features) {
+            renderMap(features);
+            renderSidebar(features);
+            renderTable(features);
+            updateAnalytics(features);
+        }
+
+        function updateAnalytics(features) {
+            let multiRisk = 0;
+            let counts = {};
+            riskTypes.forEach(rt => counts[rt.id] = 0);
+
+            features.forEach(f => {
+                const profile = getRiskProfile(f.properties);
+                profile.activeRisks.forEach(r => counts[r.id]++);
+                if(profile.riskCount >= 2) multiRisk++; 
+            });
+
+            document.getElementById('stat-total').innerText = features.length;
+            document.getElementById('stat-multi').innerText = multiRisk;
+
+            let listHTML = '';
+            riskTypes.forEach(rt => {
+                listHTML += `
+                    <div class="flex justify-between items-center">
+                        <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background-color: ${rt.hex}; box-shadow: 0 0 5px ${rt.hex};"></div> ${rt.name}</div>
+                        <span class="text-gray-900 dark:text-white font-bold">${counts[rt.id]}</span>
+                    </div>`;
+            });
+            document.getElementById('statList').innerHTML = listHTML;
+
+            const ctx = document.getElementById('riskChart').getContext('2d');
+            if (riskChartInstance) riskChartInstance.destroy();
+            const isDark = document.documentElement.classList.contains('dark');
+            
+            riskChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: riskTypes.map(rt => rt.name),
+                    datasets: [{
+                        data: riskTypes.map(rt => counts[rt.id]),
+                        backgroundColor: riskTypes.map(rt => rt.hex),
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '70%',
+                    plugins: { legend: { display: false }, tooltip: { backgroundColor: isDark ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)', titleColor: isDark ? '#fff' : '#000', bodyColor: isDark ? '#ccc' : '#333' } }
+                }
+            });
+        }
+
+        function renderMap(features) {
+            if(geojsonLayer) map.removeLayer(geojsonLayer);
+            selectedLayer = null; 
+
+            geojsonLayer = L.geoJSON(features, {
+                pointToLayer: function (feature, latlng) {
+                    const profile = getRiskProfile(feature.properties);
+                    const defaultStyle = {
+                        radius: 6, 
+                        fillColor: profile.hex, 
+                        color: "#ffffff", 
+                        weight: 2, 
+                        opacity: 1, 
+                        fillOpacity: 0.9
+                    };
+                    const marker = L.circleMarker(latlng, defaultStyle);
+                    marker.defaultStyle = defaultStyle; 
+                    return marker;
+                },
+                onEachFeature: function (feature, layer) {
+                    const p = feature.properties;
+                    const jbt = parseJembatan(p.jembatan);
+                    const objId = p.OBJECTID || p.objectid;
+                    const profile = getRiskProfile(p);
+
+                    let riskString = profile.riskCount > 0 ? profile.activeRisks.map(r => r.name).join(', ') : 'Aman';
+                    let riskBadgeColor = profile.riskCount >= 2 ? 'bg-rose-500' : (profile.riskCount === 0 ? 'bg-green-500' : profile.twClass);
+                    let badgeHex = profile.riskCount === 1 ? profile.activeRisks[0].hex : '';
+
+                    const popupContent = `
+                        <div class="glass bg-white/95 dark:bg-brand-950/95 w-[300px] rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50 flex flex-col">
+                            <div id="slider-container-${objId}" class="relative w-full h-40 bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                                <div class="animate-pulse text-xs text-gray-500 font-bold tracking-widest">MEMUAT VISUAL...</div>
+                                <div class="absolute top-3 right-3 z-10 px-2.5 py-1 ${riskBadgeColor} text-white text-[10px] font-black rounded-full shadow-lg backdrop-blur-sm bg-opacity-90 uppercase" style="background-color: ${badgeHex}">
+                                    ${riskString}
+                                </div>
+                            </div>
+                            <div class="p-4">
+                                <h4 class="font-extrabold text-base text-gray-900 dark:text-white leading-tight mb-1">${jbt.nama}</h4>
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 text-[10px] font-mono rounded border border-gray-200 dark:border-gray-700">ID: ${jbt.no}</span>
+                                </div>
+                                <p class="text-xs text-gray-500 dark:text-gray-400 truncate"><span class="font-semibold">Ruas:</span> ${p.ruas || '-'}</p>
+                            </div>
+                        </div>
+                    `;
+                    layer.bindPopup(popupContent);
+                }
+            }).addTo(map);
+        }
+
+        map.on('popupopen', async function(e) {
+            const layer = e.popup._source;
+            const p = layer.feature.properties;
+            const objId = p.OBJECTID || p.objectid;
+
+            if(layer && layer.defaultStyle) {
+                if(selectedLayer && selectedLayer !== layer) selectedLayer.setStyle(selectedLayer.defaultStyle);
+                selectedLayer = layer;
+                layer.setStyle({ radius: 12, weight: 4, color: '#fbbf24', fillOpacity: 1 });
+                layer.bringToFront();
+            }
+
+            const container = document.getElementById(`slider-container-${objId}`);
+            if (!container || container.getAttribute('data-loaded') === 'true') return;
+            try {
+                const attRes = await fetch(`${LAYER_URL}/${objId}/attachments?f=json`);
+                const attData = await attRes.json();
+                const badge = container.querySelector('.absolute.top-3'); 
+                if (attData.attachmentInfos && attData.attachmentInfos.length > 0) {
+                    const photos = attData.attachmentInfos;
+                    let slidesHTML = '';
+                    photos.forEach(photo => slidesHTML += `<div class="w-full h-full flex-shrink-0 bg-gray-900"><img src="${LAYER_URL}/${objId}/attachments/${photo.id}" class="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity"></div>`);
+                    let navHTML = '';
+                    if (photos.length > 1) {
+                        navHTML = `
+                            <button onclick="slidePhoto('${objId}', -1, ${photos.length})" class="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-black/50 hover:bg-brand-500 text-white rounded-full flex items-center justify-center backdrop-blur-md z-20"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg></button>
+                            <button onclick="slidePhoto('${objId}', 1, ${photos.length})" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-black/50 hover:bg-brand-500 text-white rounded-full flex items-center justify-center backdrop-blur-md z-20"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg></button>
+                            <div id="indicator-${objId}" class="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-black/60 text-white text-[9px] font-bold rounded-full backdrop-blur-md z-20">1 / ${photos.length}</div>
+                        `;
+                    }
+                    container.innerHTML = `${badge.outerHTML}<div id="track-${objId}" class="w-full h-full flex transition-transform duration-500 ease-out z-0">${slidesHTML}</div>${navHTML}`;
+                } else {
+                    container.innerHTML = `${badge.outerHTML}<div class="w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 text-xs text-gray-400">Visual Tidak Tersedia</div>`;
+                }
+                container.setAttribute('data-loaded', 'true');
+            } catch (error) { container.innerHTML = '<span class="text-red-500 text-xs font-bold">Gagal memuat visual</span>'; }
+        });
+
+        map.on('popupclose', function(e) {
+            const layer = e.popup._source;
+            if(layer && layer.defaultStyle) { layer.setStyle(layer.defaultStyle); if(selectedLayer === layer) selectedLayer = null; }
+        });
+
+        window.slidePhoto = function(objId, direction, totalPhotos) {
+            if (window.sliderState[objId] === undefined) window.sliderState[objId] = 0;
+            window.sliderState[objId] = (window.sliderState[objId] + direction + totalPhotos) % totalPhotos;
+            document.getElementById(`track-${objId}`).style.transform = `translateX(-${window.sliderState[objId] * 100}%)`;
+            document.getElementById(`indicator-${objId}`).innerText = `${window.sliderState[objId] + 1} / ${totalPhotos}`;
+        };
+
+        function renderSidebar(features) {
+            const listDiv = document.getElementById('bridgeList');
+            listDiv.innerHTML = '';
+            features.forEach(f => {
+                const p = f.properties;
+                const jbt = parseJembatan(p.jembatan);
+                const profile = getRiskProfile(p);
+                
+                let dotClass = profile.twClass;
+
+                const item = document.createElement('div');
+                item.className = "p-3 bg-white/50 dark:bg-gray-800/50 rounded-xl cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition border border-transparent hover:border-gray-200 dark:hover:border-gray-600 group flex items-center justify-between";
+                item.innerHTML = `
+                    <div class="overflow-hidden">
+                        <div class="font-bold text-xs text-gray-800 dark:text-gray-200 truncate group-hover:text-brand-600 dark:group-hover:text-brand-400">${jbt.nama}</div>
+                        <div class="text-[10px] text-gray-500 font-mono mt-0.5">${jbt.no}</div>
+                    </div>
+                    <div class="w-2.5 h-2.5 rounded-full ${dotClass} shrink-0" style="color: ${profile.hex}; background-color: ${profile.hex}"></div>
+                `;
+                item.addEventListener('click', () => {
+                    map.flyTo([f.geometry.coordinates[1], f.geometry.coordinates[0]], 16, { duration: 1.5 });
+                    geojsonLayer.eachLayer(layer => { if ((layer.feature.properties.OBJECTID || layer.feature.properties.objectid) === (p.OBJECTID || p.objectid)) layer.openPopup(); });
+                });
+                listDiv.appendChild(item);
+            });
+        }
+
+        function renderTable(features) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            features.forEach(f => {
+                const p = f.properties;
+                const jbt = parseJembatan(p.jembatan);
+                const profile = getRiskProfile(p);
+                
+                let badgesHTML = profile.activeRisks.map(r => `<span class="px-2 py-1 text-white text-[10px] rounded-full mr-1 inline-block mb-1" style="background-color: ${r.hex}">${r.name}</span>`).join('');
+                if(profile.riskCount === 0) badgesHTML = `<span class="px-2 py-1 bg-green-500 text-white text-[10px] rounded-full inline-block mb-1">Aman</span>`;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-colors";
+                tr.innerHTML = `
+                    <td class="px-6 py-3 font-mono text-xs text-gray-500 align-top">${jbt.no}</td>
+                    <td class="px-6 py-3 font-bold text-gray-800 dark:text-gray-200 align-top">${jbt.nama}</td>
+                    <td class="px-6 py-3 text-xs text-gray-500 truncate max-w-[200px] align-top">${p.ruas || '-'}</td>
+                    <td class="px-6 py-3 align-top whitespace-normal min-w-[200px]">${badgesHTML}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        const tableContainer = document.getElementById('tableContainer');
+        document.getElementById('toggleTableBtn').addEventListener('click', () => tableContainer.classList.remove('translate-y-[150%]'));
+        document.getElementById('closeTableBtn').addEventListener('click', () => tableContainer.classList.add('translate-y-[150%]'));
+
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            document.documentElement.classList.toggle('dark');
+            const isDark = document.documentElement.classList.contains('dark');
+            document.getElementById('icon-light').classList.toggle('hidden');
+            document.getElementById('icon-dark').classList.toggle('hidden');
+            if (isDark) { map.removeLayer(lightBasemap); darkBasemap.addTo(map); } 
+            else { map.removeLayer(darkBasemap); lightBasemap.addTo(map); }
+            updateAnalytics(globalFeatures.filter(f => {
+                if (currentFilter === 'all') return true;
+                const profile = getRiskProfile(f.properties);
+                if (currentFilter === 'multi') return profile.riskCount >= 2;
+                if (currentFilter === 'aman') return profile.riskCount === 0;
+                return profile.activeRisks.some(r => r.id === currentFilter);
+            }));
+        });
+
+        loadData();
+    </script>
+</body>
+</html>
