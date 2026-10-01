@@ -393,7 +393,12 @@
             riskTypes.forEach(rt => {
                 listHTML += `
                     <div class="flex justify-between items-center">
-                        <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full" style="background-color: ${rt.hex}; box-shadow: 0 0 5px ${rt.hex};"></div> ${rt.name}</div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 rounded-full flex items-center justify-center shrink-0 shadow-sm" style="background-color: ${rt.hex};">
+                                ${rt.svgIcon.replace('w-3.5 h-3.5', 'w-2.5 h-2.5')}
+                            </div>
+                            <span>${rt.name}</span>
+                        </div>
                         <span class="text-gray-900 dark:text-white font-bold">${counts[rt.id]}</span>
                     </div>`;
             });
@@ -421,6 +426,16 @@
             });
         }
 
+        // Kalkulasi ukuran marker berdasarkan tingkat zoom peta secara dinamis
+        function getDynamicMarkerSize() {
+            const z = map.getZoom();
+            // Semakin besar zoom, ukuran piksel bertambah proporsional
+            if (z <= 8) return { size: 20, anchor: 10, icon: 'w-2.5 h-2.5' };
+            if (z <= 11) return { size: 26, anchor: 13, icon: 'w-3.5 h-3.5' };
+            if (z <= 14) return { size: 34, anchor: 17, icon: 'w-4.5 h-4.5' };
+            return { size: 42, anchor: 21, icon: 'w-5 h-5' };
+        }
+
         function renderMap(features) {
             if(geojsonLayer) map.removeLayer(geojsonLayer);
             selectedLayer = null; 
@@ -428,36 +443,41 @@
             geojsonLayer = L.geoJSON(features, {
                 pointToLayer: function (feature, latlng) {
                     const profile = getRiskProfile(feature.properties, currentFilter); 
+                    const dyn = getDynamicMarkerSize();
                     
                     if (profile.riskCount >= 2 && currentFilter === 'all') {
-                        // Multi-Risiko Marker dengan Badge Angka
+                        // Multi-Risiko Marker dengan Badge Angka Dinamis
                         const customHtml = `
-                            <div class="relative flex items-center justify-center w-7 h-7 bg-red-600 rounded-full border-2 border-white shadow-lg text-white">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white shadow">${profile.riskCount}</span>
+                            <div class="relative flex items-center justify-center rounded-full border-2 border-white shadow-lg text-white" style="width: ${dyn.size}px; height: ${dyn.size}px; background-color: #EF4444;">
+                                <div class="${dyn.icon} flex items-center justify-center">
+                                    <svg class="w-full h-full" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                </div>
+                                <span class="absolute -top-1 -right-1 bg-black text-white text-[8px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white shadow">${profile.riskCount}</span>
                             </div>
                         `;
                         const customIcon = L.divIcon({
                             className: 'custom-multi-marker',
                             html: customHtml,
-                            iconSize: [28, 28],
-                            iconAnchor: [14, 14]
+                            iconSize: [dyn.size, dyn.size],
+                            iconAnchor: [dyn.anchor, dyn.anchor]
                         });
                         const m = L.marker(latlng, { icon: customIcon });
                         m.defaultStyle = { isCustomIcon: true };
                         return m;
                     } else {
-                        // Risiko Tunggal / Aman dengan Ikon SVG & Warna Khas masing-masing
+                        // Risiko Tunggal / Aman dengan Skala Dinamis
                         const customHtml = `
-                            <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white shadow-md" style="background-color: ${profile.hex};">
-                                ${profile.svgIcon}
+                            <div class="flex items-center justify-center rounded-full border-2 border-white shadow-md" style="width: ${dyn.size}px; height: ${dyn.size}px; background-color: ${profile.hex};">
+                                <div class="${dyn.icon} flex items-center justify-center">
+                                    ${profile.svgIcon}
+                                </div>
                             </div>
                         `;
                         const customIcon = L.divIcon({
                             className: 'custom-risk-marker',
                             html: customHtml,
-                            iconSize: [24, 24],
-                            iconAnchor: [12, 12]
+                            iconSize: [dyn.size, dyn.size],
+                            iconAnchor: [dyn.anchor, dyn.anchor]
                         });
                         const m = L.marker(latlng, { icon: customIcon });
                         m.defaultStyle = { isCustomIcon: true, hex: profile.hex };
@@ -521,7 +541,6 @@
                         </div>
                     `;
                     
-                    // autoPan diaktifkan agar Leaflet otomatis menyesuaikan ruang kosong di layar
                     layer.bindPopup(popupContent, { 
                         autoPan: true, 
                         autoPanPadding: [50, 50],
@@ -530,10 +549,17 @@
                 }
             }).addTo(map);
 
-            if (features.length > 0) {
+            if (features.length > 0 && !map._zoomAnimated) {
                 map.fitBounds(geojsonLayer.getBounds(), { padding: [50, 50], maxZoom: 14, animate: true, duration: 1.2 });
             }
         }
+
+        // Auto-refresh ukuran marker saat tingkat zoom peta berubah
+        map.on('zoomend', () => {
+            if (activeFilteredFeatures.length > 0) {
+                renderMap(activeFilteredFeatures);
+            }
+        });
 
         map.on('popupopen', async function(e) {
             const layer = e.popup._source;
