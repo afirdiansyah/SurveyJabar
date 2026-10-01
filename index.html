@@ -49,6 +49,22 @@
             bottom: 1.5rem;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
+
+        /* Radar Pulse untuk Inset Map */
+        @keyframes radar-pulse {
+            0% { transform: scale(0.95); opacity: 0.9; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+            70% { transform: scale(1.1); opacity: 1; box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+            100% { transform: scale(0.95); opacity: 0.9; box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+        }
+        .inset-radar-marker {
+            width: 14px;
+            height: 14px;
+            background: #3b82f6;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            animation: radar-pulse 2s infinite ease-in-out;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+        }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800 dark:bg-brand-950 dark:text-gray-200 transition-colors duration-500 selection:bg-brand-500 selection:text-white font-sans">
@@ -67,6 +83,15 @@
     <!-- Peta Fullscreen -->
     <div id="map"></div>
 
+    <!-- PETA MINI INSET (Jawa Barat Overview) -->
+    <div class="absolute bottom-6 left-6 z-[400] w-52 h-40 glass bg-lightglass dark:bg-darkglass rounded-2xl shadow-2xl overflow-hidden hidden md:flex flex-col border border-white/20 transition-all">
+        <div class="px-3 py-1.5 bg-white/50 dark:bg-gray-900/50 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
+            <span class="text-[9px] font-extrabold uppercase tracking-widest text-gray-500 dark:text-gray-400">Overview • Jawa Barat</span>
+            <div class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></div>
+        </div>
+        <div id="insetMap" class="w-full flex-1 bg-gray-200 dark:bg-gray-900"></div>
+    </div>
+
     <!-- Tombol Kontrol Peta -->
     <div class="absolute top-6 right-6 z-[400] flex items-center gap-3">
         <button id="resetViewBtn" class="glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-2xl shadow-xl font-bold text-xs transition-all flex items-center gap-2">
@@ -79,7 +104,7 @@
     </div>
 
     <!-- SIDEBAR KIRI -->
-    <aside id="leftSidebar" class="absolute top-6 left-6 bottom-24 w-[380px] glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden transition-transform duration-500">
+    <aside id="leftSidebar" class="absolute top-6 left-6 bottom-48 w-[380px] glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden transition-transform duration-500">
         <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between bg-white/30 dark:bg-gray-900/30">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-blue-400 flex items-center justify-center text-white shadow-md shrink-0">
@@ -104,7 +129,7 @@
         <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50 space-y-3">
             <div class="relative">
                 <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="searchInput" placeholder="Cari nama jembatan / ruas..." class="w-full pl-9 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/50 border border-transparent dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs text-gray-800 dark:text-gray-200 transition-all">
+                <input type="text" id="searchInput" placeholder="Cari nomor/nama jembatan / ruas..." class="w-full pl-9 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/50 border border-transparent dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs text-gray-800 dark:text-gray-200 transition-all">
             </div>
             <div>
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Layer Analisis Risiko</h3>
@@ -201,6 +226,25 @@
         const lightBasemap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
         const darkBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' });
         darkBasemap.addTo(map);
+
+        // INISIALISASI PETA MINI INSET (Jawa Barat Overview)
+        const insetMap = L.map('insetMap', { zoomControl: false, attributionControl: false, dragging: false, scrollWheelZoom: false, doubleClickZoom: false }).setView([-7.0, 107.6], 7);
+        const insetLightBasemap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 10 });
+        const insetDarkBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 10 });
+        insetDarkBasemap.addTo(insetMap);
+        let insetMarker = null;
+
+        function updateInsetMarker(latlng) {
+            if (insetMarker) insetMap.removeLayer(insetMarker);
+            const radarIcon = L.divIcon({
+                className: 'custom-radar-container',
+                html: '<div class="inset-radar-marker"></div>',
+                iconSize: [14, 14],
+                iconAnchor: [7, 7]
+            });
+            insetMarker = L.marker(latlng, { icon: radarIcon }).addTo(insetMap);
+            insetMap.setView(latlng, 7, { animate: true });
+        }
 
         let globalFeatures = [];
         let geojsonLayer;
@@ -357,7 +401,6 @@
                 const p = f.properties;
                 const jbt = parseJembatan(p.jembatan);
                 
-                // Cek pencocokan pada Nama Jembatan, Nomor Jembatan, maupun Nama Ruas
                 const matchText = (jbt.nama || '').toLowerCase().includes(searchVal) || 
                                   (jbt.no || '').toLowerCase().includes(searchVal) || 
                                   (p.ruas || '').toLowerCase().includes(searchVal);
@@ -504,17 +547,17 @@
                     const objId = p.OBJECTID || p.objectid;
                     const profile = getRiskProfile(p, 'all'); 
 
-                    // TAMBAHKAN EVENT KLIK DI SINI AGAR SAAT MARKER DIKLIK LANGSUNG ZOOM & BUKA POPUP
                     layer.on('click', function(e) {
                         const latlng = layer.getLatLng();
                         map.setView(latlng, 15, { animate: true, duration: 0.8 });
+                        updateInsetMarker(latlng);
                     });
 
                     let statusBoxClass = "bg-green-500/10 text-green-500 border-green-500/20";
                     let statusText = "🟢 AMAN (Tanpa Ancaman)";
                     if (profile.riskCount >= 2) {
                         statusBoxClass = "bg-rose-500/10 text-rose-500 border-rose-500/20";
-                        statusText = `⚠️️ MULTI RISIKO (${profile.riskCount} Ancaman)`;
+                        statusText = `⚠️ MULTI RISIKO (${profile.riskCount} Ancaman)`;
                     } else if (profile.riskCount === 1) {
                         statusBoxClass = "bg-amber-500/10 text-amber-500 border-amber-500/20";
                         statusText = `⚡ RISIKO TUNGGAL (${profile.activeRisks[0].name})`;
@@ -563,8 +606,6 @@
                     
                     layer.bindPopup(popupContent, { autoPan: true, autoPanPadding: [50, 50], closeButton: false });
                 }
-                  
-                            
             }).addTo(map);
 
             if (features.length > 0 && !map._zoomAnimated) {
@@ -597,7 +638,7 @@
             const isRightOpen = isDesktop && !rightPanel.classList.contains('hidden-panel');
 
             const table = document.getElementById('tableContainer');
-            const isTableOpen = !table.classList.contains('translate-y-[120%]');
+            const isTableOpen = !table.classList.contains('translate-y-[150%]');
             
             if (isSidebarOpen && isRightOpen) {
                 pt.x -= 10; 
@@ -608,10 +649,10 @@
             }
             
             if (isTableOpen) {
-                pt.y -= 30; 
+                pt.y -= 50; 
             }
 
-            map.panTo(map.unproject(pt, zoom), { animate: true, duration: 0.4 });
+            map.setView(map.unproject(pt, zoom), map.getZoom(), { animate: true, duration: 0.4 });
 
             const container = document.getElementById(`slider-container-${objId}`);
             if (!container || container.getAttribute('data-loaded') === 'true') return;
@@ -645,7 +686,7 @@
             document.getElementById(`indicator-${objId}`).innerText = `${window.sliderState[objId] + 1} / ${totalPhotos}`;
         };
 
-       function renderSidebar(features) {
+        function renderSidebar(features) {
             const listDiv = document.getElementById('bridgeList');
             listDiv.innerHTML = '';
             features.forEach(f => {
@@ -668,9 +709,9 @@
                     e.stopPropagation();
                     geojsonLayer.eachLayer(layer => { 
                         if ((layer.feature.properties.OBJECTID || layer.feature.properties.objectid) === (p.OBJECTID || p.objectid)) {
-                            // AMBIL KOORDINAT & ZOOM LANGSUNG KE TITIK JEMBATAN
                             const latlng = layer.getLatLng();
-                            map.setView(latlng, 15, { animate: true, duration: 0.8 }); // Zoom level 15 (cukup dekat ke titik)
+                            map.setView(latlng, 15, { animate: true, duration: 0.8 });
+                            updateInsetMarker(latlng);
                             layer.openPopup();
                         } 
                     });
@@ -678,6 +719,7 @@
                 listDiv.appendChild(item);
             });
         }
+
         function renderTable(features) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -702,6 +744,9 @@
                     e.stopPropagation();
                     geojsonLayer.eachLayer(layer => { 
                         if ((layer.feature.properties.OBJECTID || layer.feature.properties.objectid) === (p.OBJECTID || p.objectid)) {
+                            const latlng = layer.getLatLng();
+                            map.setView(latlng, 15, { animate: true, duration: 0.8 });
+                            updateInsetMarker(latlng);
                             layer.openPopup();
                         } 
                     });
@@ -789,8 +834,13 @@
             const isDark = document.documentElement.classList.contains('dark');
             document.getElementById('icon-light').classList.toggle('hidden');
             document.getElementById('icon-dark').classList.toggle('hidden');
-            if (isDark) { map.removeLayer(lightBasemap); darkBasemap.addTo(map); } 
-            else { map.removeLayer(darkBasemap); lightBasemap.addTo(map); }
+            if (isDark) { 
+                map.removeLayer(lightBasemap); darkBasemap.addTo(map); 
+                insetMap.removeLayer(insetLightBasemap); insetDarkBasemap.addTo(insetMap);
+            } else { 
+                map.removeLayer(darkBasemap); lightBasemap.addTo(map); 
+                insetMap.removeLayer(insetDarkBasemap); insetLightBasemap.addTo(insetMap);
+            }
             updateAnalytics(activeFilteredFeatures);
         });
 
