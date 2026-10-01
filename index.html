@@ -226,7 +226,6 @@
         }
         function checkRisk(val) { return val && (val.toLowerCase() === 'yes' || val === 1 || val === '1'); }
 
-        // Fungsi penentuan warna di-upgrade untuk memperhitungkan filter aktif
         function getRiskProfile(p, activeFilter = 'all') {
             let activeRisks = riskTypes.filter(rt => checkRisk(p[rt.id]));
             let riskCount = activeRisks.length;
@@ -237,18 +236,13 @@
             let strokeWidth = 2;
 
             if (riskCount >= 2) {
-                // Jika sedang memilih filter spesifik (bukan all/multi/aman)
                 if (activeFilter !== 'all' && activeFilter !== 'multi' && activeFilter !== 'aman') {
-                    // Warna UTAMA disamakan dengan warna filter yg dipilih biar seragam
                     let activeFilterObj = riskTypes.find(r => r.id === activeFilter);
                     hex = activeFilterObj.hex;
                     twClass = activeFilterObj.tw;
-                    
-                    // Garis tepinya dibikin Merah (Rose) untuk kasih tau ini Multi-Risiko
                     strokeColor = '#e11d48'; 
                     strokeWidth = 3.5; 
                 } else {
-                    // Jika di mode All / Multi, tetep pakai warna merah default multi-risiko
                     hex = '#e11d48'; 
                     twClass = 'bg-rose-600';
                 }
@@ -293,7 +287,6 @@
                     currentFilter = target.dataset.filter;
                     applyFilters();
 
-                    // Tampilkan atau sembunyikan Hint Legend (Tips Titik Merah)
                     const hintDiv = document.getElementById('filterHint');
                     if (currentFilter !== 'all' && currentFilter !== 'aman' && currentFilter !== 'multi') {
                         hintDiv.classList.remove('hidden');
@@ -328,7 +321,7 @@
                 const matchText = (p.jembatan || '').toLowerCase().includes(searchVal) || (p.ruas || '').toLowerCase().includes(searchVal);
                 let matchLayer = true;
                 if (currentFilter !== 'all') {
-                    const profile = getRiskProfile(p, 'all'); // hitung profil murni untuk filter logic
+                    const profile = getRiskProfile(p, 'all'); 
                     if (currentFilter === 'multi') matchLayer = profile.riskCount >= 2;
                     else if (currentFilter === 'aman') matchLayer = profile.riskCount === 0;
                     else matchLayer = checkRisk(p[currentFilter]);
@@ -398,7 +391,6 @@
 
             geojsonLayer = L.geoJSON(features, {
                 pointToLayer: function (feature, latlng) {
-                    // Panggil fungsi riskProfile DENGAN parameter currentFilter agar style update sesuai UX nomor 1
                     const profile = getRiskProfile(feature.properties, currentFilter); 
                     const defaultStyle = {
                         radius: 6, 
@@ -416,13 +408,12 @@
                     const p = feature.properties;
                     const jbt = parseJembatan(p.jembatan);
                     const objId = p.OBJECTID || p.objectid;
-                    const profile = getRiskProfile(p, 'all'); // Popup selalu menampilkan data murni
+                    const profile = getRiskProfile(p, 'all'); 
 
                     let riskString = profile.riskCount > 0 ? profile.activeRisks.map(r => r.name).join(', ') : 'Aman';
                     let riskBadgeColor = profile.riskCount >= 2 ? 'bg-rose-500' : (profile.riskCount === 0 ? 'bg-green-500' : profile.twClass);
                     let badgeHex = profile.riskCount === 1 ? profile.activeRisks[0].hex : '';
 
-                    // Tambahkan Tombol Close custom (Silang) di HTML pop-up
                     const popupContent = `
                         <div class="glass bg-white/95 dark:bg-brand-950/95 w-[300px] rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50 flex flex-col relative">
                             <!-- Custom Close Button -->
@@ -445,12 +436,10 @@
                             </div>
                         </div>
                     `;
-                    // Matikan autoPan bawaan agar tidak konflik dengan flyTo buatan kita (Solusi UX No. 3)
                     layer.bindPopup(popupContent, { autoPan: false, closeButton: false });
                 }
             }).addTo(map);
 
-            // AUTO ZOOM TO LAYER (Fit Bounds) - Jawaban UX No. 2
             if (features.length > 0) {
                 map.fitBounds(geojsonLayer.getBounds(), { padding: [50, 50], maxZoom: 14, animate: true, duration: 1.2 });
             }
@@ -462,15 +451,26 @@
             const objId = p.OBJECTID || p.objectid;
             const latlng = layer.getLatLng();
 
-            // ANIMASI MAP PAN (Solusi UX No. 3)
-            // Kalkulasi posisi titik agak digeser biar popup tidak ketutup sidebar
-            const pt = map.project(latlng);
-            const isDesktop = window.innerWidth > 768;
+            // ==========================================
+            // ANIMASI MAP PAN (PERBAIKAN POSISI POPUP)
+            // ==========================================
+            const zoom = map.getZoom();
+            const pt = map.project(latlng, zoom);
             
-            // Jika sidebar kiri tampil, geser peta agak ke kiri agar popup ke kanan (dan sebaliknya)
-            pt.x -= isDesktop ? 50 : 0; // Sesuaikan jika masih mepet
-            pt.y -= 120; // Geser ke atas supaya popup (yang tingginya 300px) terlihat full di tengah
-            map.flyTo(map.unproject(pt), map.getZoom(), { animate: true, duration: 0.8 });
+            const isDesktop = window.innerWidth > 768;
+            const sidebar = document.getElementById('leftSidebar');
+            const isSidebarOpen = isDesktop && !sidebar.classList.contains('hidden-panel');
+            
+            // Geser pusat kamera ke KIRI sejauh 220px jika sidebar terbuka
+            if (isSidebarOpen) {
+                pt.x -= 220; 
+            }
+            
+            // Geser pusat kamera ke ATAS sejauh 160px agar popup tidak terpotong header
+            pt.y -= 160; 
+
+            map.flyTo(map.unproject(pt, zoom), zoom, { animate: true, duration: 0.8 });
+            // ==========================================
 
             if(layer && layer.defaultStyle) {
                 if(selectedLayer && selectedLayer !== layer) selectedLayer.setStyle(selectedLayer.defaultStyle);
@@ -523,7 +523,7 @@
             features.forEach(f => {
                 const p = f.properties;
                 const jbt = parseJembatan(p.jembatan);
-                const profile = getRiskProfile(p, currentFilter); // Sinkronisasi warna list sama map
+                const profile = getRiskProfile(p, currentFilter); 
                 
                 let dotClass = profile.twClass;
 
@@ -537,7 +537,6 @@
                     <div class="w-2.5 h-2.5 rounded-full ${dotClass} shrink-0 border border-white" style="background-color: ${profile.hex}; border-color: ${profile.strokeColor}; border-width: ${profile.strokeWidth > 2 ? '2px' : '0'}"></div>
                 `;
                 item.addEventListener('click', () => {
-                    // Cukup open popup, logika kamera center sudah otomatis diurus di map.on('popupopen')
                     geojsonLayer.eachLayer(layer => { if ((layer.feature.properties.OBJECTID || layer.feature.properties.objectid) === (p.OBJECTID || p.objectid)) layer.openPopup(); });
                 });
                 listDiv.appendChild(item);
@@ -595,7 +594,7 @@
 
         document.getElementById('resetViewBtn').addEventListener('click', () => {
             map.setView([-6.8, 107.4], 9, { animate: true, duration: 1 });
-            document.querySelector('[data-filter="all"]').click(); // Reset filter sekalian
+            document.querySelector('[data-filter="all"]').click(); 
         });
 
         document.getElementById('cardMultiRisk').addEventListener('click', () => {
