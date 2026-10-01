@@ -632,7 +632,7 @@
             document.getElementById(`indicator-${objId}`).innerText = `${window.sliderState[objId] + 1} / ${totalPhotos}`;
         };
 
-        function renderSidebar(features) {
+       function renderSidebar(features) {
             const listDiv = document.getElementById('bridgeList');
             listDiv.innerHTML = '';
             features.forEach(f => {
@@ -655,6 +655,9 @@
                     e.stopPropagation();
                     geojsonLayer.eachLayer(layer => { 
                         if ((layer.feature.properties.OBJECTID || layer.feature.properties.objectid) === (p.OBJECTID || p.objectid)) {
+                            // AMBIL KOORDINAT & ZOOM LANGSUNG KE TITIK JEMBATAN
+                            const latlng = layer.getLatLng();
+                            map.setView(latlng, 15, { animate: true, duration: 0.8 }); // Zoom level 15 (cukup dekat ke titik)
                             layer.openPopup();
                         } 
                     });
@@ -662,7 +665,6 @@
                 listDiv.appendChild(item);
             });
         }
-
         function renderTable(features) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
