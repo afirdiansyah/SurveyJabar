@@ -26,92 +26,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        .dark ::-webkit-scrollbar-thumb { background: #334155; }
-        body { overflow: hidden; margin: 0; }
-        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 0; }
-        
-        .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15); }
-        .dark .glass { border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        .leaflet-popup-content-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
-        .leaflet-popup-tip-container { display: none; }
-        .leaflet-popup-content { margin: 0 !important; width: 320px !important; }
-
-        path.leaflet-interactive { transition: stroke-width 0.3s ease, stroke 0.3s ease, fill-opacity 0.3s ease; }
-
-        #leftSidebar.hidden-panel { transform: translateX(-110%); }
-        #rightPanel.hidden-panel { transform: translateX(110%); }
-    </style>
-</head>
-<body class="bg-gray-100 text-gray-800 dark:bg-brand-950 dark:text-gray-200 transition-colors duration-500 selection:bg-brand-500 selection:text-white font-sans">
-
-    <!-- Loading Screen -->
-    <div id="loadingScreen" class="fixed inset-0 bg-brand-950 z-[9999] flex flex-col items-center justify-center transition-all duration-700">
-        <div class="relative w-24 h-24 mb-6">
-            <div class="absolute inset-0 border-4 border-brand-900 rounded-full"></div>
-            <div class="absolute inset-0 border-4 border-brand-500 rounded-full border-t-transparent animate-spin"></div>
-            <div class="absolute inset-0 flex items-center justify-center font-bold text-brand-500">GIS</div>
-        </div>
-        <h2 class="text-xl font-bold text-white tracking-widest animate-pulse">SINKRONISASI DATA...</h2>
-        <p class="text-xs text-gray-500 mt-2">Bina Marga Nasional</p>
-    </div>
-
-    <!-- Peta Fullscreen -->
-    <div id="map"></div>
-
-    <!-- Tombol Kontrol Peta -->
-    <div class="absolute top-6 right-6 z-[400] flex items-center gap-3">
-        <button id="resetViewBtn" class="glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-2xl shadow-xl font-bold text-xs transition-all flex items-center gap-2">
-            <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1vSiap bang! Masukannya sangat detail dan tepat sasaran. Ini gua perbaiki semua poinnya secara menyeluruh:
-
-1. **Ukuran & Posisi Pop-up**: Lebar dan tinggi pop-up udah dibatasi biar aman di dalam layar (`max-height` dan max width proporsional), serta logikanya disesuaikan agar tidak mentok ke atas/tertutup header.
-2. **Desain & Animasi Tabel**: Tabel bawah posisinya diturunkan sedikit dan dibuat lebih ramping (`max-h-[280px]`). Ketika tabel dibuka atau ditutup, kalkulasi pergerakan kamera (*pan*) otomatis menyesuaikan secara dinamis agar pop-up tidak tertutup.
-3. **Brainstorming Icon SVG Risiko (Lengkap dengan Warna Khas)**:
-   - **Banjir**: Gelombang Air (`#1D4ED8`)
-   - **Longsor**: Tebing Runtuh (`#854D0E`)
-   - **Gempa Bumi**: Retakan Seismik (`#D97706`)
-   - **Cuaca Ekstrim**: Petir / Badai (`#7C3AED`)
-   - **ODOL (Beban)**: Truk / Beban Berat (`#EA580C`)
-   - **Korosi**: Karat / Tetesan Korosif (`#CA8A04`)
-   - **Konstruksi Buruk**: Kerusakan Struktur (`#DB2777`)
-   - **Benda Asing**: Objek Asing / Hambatan (`#0891B2`)
-   - **Vandalisme**: Coretan / Vandalis (`#0D9488`)
-   - **Aman**: Perisai Hijau (`#16A34A`)
-4. **Multi-Risiko & Badge Angka**: Jembatan dengan multi-risiko ( $\ge 2$ ancaman) menggunakan marker pin merah solid (`#EF4444`) dengan ikon tanda seru segitiga (`triangle-alert`), lengkap dengan **badge lingkaran hitam berisi angka jumlah ancaman** (contoh: ③) di atasnya.
-
-Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
-
-```html
-<!DOCTYPE html>
-<html lang="id" class="dark">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Identifikasi Risiko Jembatan Jawa Barat 2026</title>
-    
-    <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap)" rel="stylesheet">
-    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
-    <script>
-        tailwind.config = { 
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
-                    colors: {
-                        brand: { 50: '#eff6ff', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a', 950: '#0f172a' },
-                        darkglass: 'rgba(15, 23, 42, 0.9)',
-                        lightglass: 'rgba(255, 255, 255, 0.95)'
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.css](https://unpkg.com/leaflet@1.9.4/dist/leaflet.css)" />
-    <script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
-
-    <style>
         ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
@@ -131,7 +45,6 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
         #leftSidebar.hidden-panel { transform: translateX(-110%); }
         #rightPanel.hidden-panel { transform: translateX(110%); }
         
-        /* Animasi Tabel Bawah */
         #tableContainer {
             bottom: 1.5rem;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -276,7 +189,7 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
     </div>
 
     <!-- Scripts -->
-    <script src="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.js](https://unpkg.com/leaflet@1.9.4/dist/leaflet.js)"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const LAYER_URL = "https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0";
         
@@ -285,8 +198,8 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
         
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        const lightBasemap = L.tileLayer('[https://tile.openstreetmap.org/](https://tile.openstreetmap.org/){z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
-        const darkBasemap = L.tileLayer('[https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/){z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' });
+        const lightBasemap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
+        const darkBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' });
         darkBasemap.addTo(map);
 
         let globalFeatures = [];
@@ -298,7 +211,6 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
         let selectedLayer = null;
         let activeFilteredFeatures = [];
 
-        // Brainstorming Ikon SVG & Warna Khas Risiko
         const riskTypes = [
             { 
                 id: 'banjir', name: 'Banjir', hex: '#1D4ED8', tw: 'bg-blue-700',
@@ -355,7 +267,6 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
             let strokeWidth = 2;
 
             if (riskCount >= 2) {
-                // Multi-Risiko: Pin Merah Solid (#EF4444)
                 strokeColor = '#FFFFFF'; 
                 strokeWidth = 3; 
                 hex = '#EF4444';
@@ -376,7 +287,6 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
             return { activeRisks, riskCount, hex, twClass, strokeColor, strokeWidth };
         }
 
-        // Helper Konversi Angka ke Simbol Lingkaran Kecil (①, ②, ③, dst)
         function getCircledNumber(n) {
             const symbols = ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
             return symbols[n] || `(${n})`;
@@ -522,7 +432,6 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
                     const profile = getRiskProfile(feature.properties, currentFilter); 
                     
                     if (profile.riskCount >= 2 && currentFilter === 'all') {
-                        // Custom Marker dengan Badge Angka untuk Multi-Risiko
                         const badgeNum = getCircledNumber(profile.riskCount);
                         const customHtml = `
                             <div class="relative flex items-center justify-center w-7 h-7 bg-red-600 rounded-full border-2 border-white shadow-lg text-white">
@@ -578,20 +487,16 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
                         risksListHTML = `<li class="text-gray-400 italic">Tidak ada faktor risiko terdeteksi.</li>`;
                     }
 
-                    // Struktur Pop-up Sesuai Permintaan Lu
                     const popupContent = `
                         <div class="glass bg-white/95 dark:bg-brand-950/95 w-[300px] max-h-[400px] rounded-2xl overflow-y-auto shadow-2xl border border-gray-200/50 dark:border-gray-700/50 flex flex-col relative text-xs">
-                            <!-- Tombol Close -->
                             <button onclick="window.map.closePopup()" class="absolute top-2 left-2 z-[60] w-6 h-6 bg-black/60 hover:bg-red-500 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors border border-white/20 shadow-lg cursor-pointer">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                             
-                            <!-- Foto / Visual Slider -->
                             <div id="slider-container-${objId}" class="relative w-full h-32 bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
                                 <div class="animate-pulse text-xs text-gray-500 font-bold tracking-widest">MEMUAT VISUAL...</div>
                             </div>
 
-                            <!-- Informasi Utama -->
                             <div class="p-3.5 space-y-2.5">
                                 <div>
                                     <h4 class="font-extrabold text-xs text-gray-900 dark:text-white leading-tight">${jbt.nama} - <span class="font-mono text-brand-500">${jbt.no}</span></h4>
@@ -600,12 +505,10 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
 
                                 <hr class="border-gray-200/50 dark:border-gray-700/50">
 
-                                <!-- Status Risiko -->
                                 <div class="p-2 rounded-xl border font-bold text-[10px] text-center ${statusBoxClass}">
                                     ${statusText}
                                 </div>
 
-                                <!-- Faktor Risiko Terdeteksi -->
                                 <div class="space-y-1">
                                     <div class="font-bold text-[9px] text-gray-400 uppercase tracking-wider">Faktor Risiko Terdeteksi:</div>
                                     <ul class="space-y-1 pl-1 text-gray-700 dark:text-gray-300 font-medium text-[11px]">
@@ -630,9 +533,6 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
             const objId = p.OBJECTID || p.objectid;
             const latlng = layer.getLatLng();
 
-            // ==========================================
-            // KALIBRASI MAP PAN DINAMIS (MEMBACA STATUS TABEL)
-            // ==========================================
             const zoom = map.getZoom();
             const pt = map.project(latlng, zoom);
             
@@ -643,12 +543,10 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
             const table = document.getElementById('tableContainer');
             const isTableOpen = !table.classList.contains('translate-y-[150%]');
             
-            // Geser Horizontal hindari sidebar kiri
             if (isSidebarOpen) {
                 pt.x -= 140; 
             }
             
-            // Geser Vertikal Dinamis: Jika tabel terbuka, dorong kamera lebih jauh ke bawah agar pop-up melayang pas di atas tabel
             if (isTableOpen) {
                 pt.y += 150; 
             } else {
@@ -656,13 +554,10 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
             }
 
             map.flyTo(map.unproject(pt, zoom), zoom, { animate: true, duration: 0.6 });
-            // ==========================================
 
             if(layer && layer.defaultStyle) {
                 if(selectedLayer && selectedLayer !== layer) {
-                    if(selectedLayer.defaultStyle.isCustomIcon) {
-                        // Reset marker khusus jika ada
-                    } else {
+                    if(!selectedLayer.defaultStyle.isCustomIcon) {
                         selectedLayer.setStyle(selectedLayer.defaultStyle);
                     }
                 }
@@ -829,12 +724,10 @@ Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
             document.body.removeChild(link);
         });
 
-        // Kontrol Tabel Bawah & Dinamis Pergerakan Popup
         const tableContainer = document.getElementById('tableContainer');
         document.getElementById('toggleTableBtn').addEventListener('click', () => {
             tableContainer.classList.remove('translate-y-[150%]');
             if (map.hasEventListeners('popupopen')) {
-                // Refresh posisi popup jika sedang terbuka saat tabel dibuka
                 const activePopup = map._popup;
                 if (activePopup && activePopup._source) {
                     activePopup._source.openPopup();
