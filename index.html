@@ -575,7 +575,7 @@
             const isRightOpen = isDesktop && !rightPanel.classList.contains('hidden-panel');
 
             const table = document.getElementById('tableContainer');
-            const isTableOpen = !table.classList.contains('translate-y-[150%]');
+            const isTableOpen = !table.classList.contains('translate-y-[120%]');
             
             if (isSidebarOpen && isRightOpen) {
                 pt.x -= 10; 
@@ -586,7 +586,7 @@
             }
             
             if (isTableOpen) {
-                pt.y += 2; 
+                pt.y += 1; 
             }
 
             map.panTo(map.unproject(pt, zoom), { animate: true, duration: 0.4 });
