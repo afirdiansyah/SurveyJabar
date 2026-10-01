@@ -41,7 +41,6 @@
 
         path.leaflet-interactive { transition: stroke-width 0.3s ease, stroke 0.3s ease, fill-opacity 0.3s ease; }
 
-        /* Kelas untuk Hide Panel Kiri & Kanan */
         #leftSidebar.hidden-panel { transform: translateX(-110%); }
         #rightPanel.hidden-panel { transform: translateX(110%); }
     </style>
@@ -62,66 +61,63 @@
     <!-- Peta Fullscreen -->
     <div id="map"></div>
 
-    <!-- Tombol Kontrol Peta (Kamera & Reset) di Pojok Kanan Atas -->
+    <!-- Tombol Kontrol Peta -->
     <div class="absolute top-6 right-6 z-[400] flex items-center gap-3">
-        <button id="resetViewBtn" class="glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-2xl shadow-xl font-bold text-xs transition-all flex items-center gap-2" title="Kembalikan pandangan ke seluruh Jawa Barat">
+        <button id="resetViewBtn" class="glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-2xl shadow-xl font-bold text-xs transition-all flex items-center gap-2">
             <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
             Reset Kamera
         </button>
-        <!-- Tombol Unhide Sidebar Kiri (Muncul pas panel kiri di-hide) -->
-        <button id="showLeftBtn" class="hidden glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-2xl shadow-xl transition-all" title="Buka Menu Kiri">
+        <button id="showLeftBtn" class="hidden glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-2xl shadow-xl transition-all">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </button>
     </div>
 
-    <!-- SIDEBAR KIRI (Dilengkapi Tombol Hide) -->
+    <!-- SIDEBAR KIRI -->
     <aside id="leftSidebar" class="absolute top-6 left-6 bottom-24 w-[380px] glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden transition-transform duration-500">
-        
-        <!-- Header Sidebar -->
         <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between bg-white/30 dark:bg-gray-900/30">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-blue-400 flex items-center justify-center text-white shadow-md shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                 </div>
                 <div>
-                    <h1 class="font-extrabold tracking-tight text-xs text-gray-900 dark:text-white uppercase leading-snug">Identifikasi Risiko Jembatan Jabar</h1>
-                    <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Bina Marga • 2026</p>
+                    <h1 class="font-extrabold tracking-tight text-xs text-gray-900 dark:text-white uppercase leading-snug">Identifikasi Risiko Jembatan</h1>
+                    <p class="text-[10px] text-gray-500 dark:text-gray-400 font-medium">Bina Marga • Jabar</p>
                 </div>
             </div>
             <div class="flex items-center gap-1.5">
-                <button id="themeToggle" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-brand-500 dark:text-gray-400 transition-colors shrink-0 shadow-sm" title="Ubah Tema">
+                <button id="themeToggle" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-brand-500 dark:text-gray-400 transition-colors">
                     <svg id="icon-dark" class="w-4 h-4 hidden" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path></svg>
                     <svg id="icon-light" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                 </button>
-                <!-- Tombol Hide Kiri -->
-                <button id="hideLeftBtn" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-red-500 dark:text-gray-400 transition-colors shrink-0 shadow-sm" title="Sembunyikan Panel">
+                <button id="hideLeftBtn" class="p-2 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-500 hover:text-red-500 dark:text-gray-400 transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
             </div>
         </div>
 
-        <!-- Search & Filter Layer -->
         <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50 space-y-3">
             <div class="relative">
                 <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                <input type="text" id="searchInput" placeholder="Cari nama jembatan / ruas..." class="w-full pl-9 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/50 border border-transparent dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs text-gray-800 dark:text-gray-200 transition-all placeholder-gray-400">
+                <input type="text" id="searchInput" placeholder="Cari nama jembatan / ruas..." class="w-full pl-9 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/50 border border-transparent dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs text-gray-800 dark:text-gray-200 transition-all">
             </div>
             <div>
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Layer Analisis Risiko</h3>
                 <div class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1" id="filterContainer"></div>
+                <!-- Petunjuk visual tambahan (dinamis) -->
+                <div id="filterHint" class="hidden mt-3 p-2 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg text-[10px] font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+                    <span class="text-rose-500 font-bold">*Tips:</span> Titik dengan garis luar merah menandakan jembatan tersebut juga memiliki risiko bencana lainnya.
+                </div>
             </div>
         </div>
 
-        <!-- List Jembatan -->
         <div id="bridgeList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
     </aside>
 
-    <!-- PANEL KANAN: Statistik & Chart (Dilengkapi Tombol Hide) -->
+    <!-- PANEL KANAN -->
     <section id="rightPanel" class="absolute top-24 right-6 w-80 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col p-5 space-y-4 transition-transform duration-500">
         <div class="flex justify-between items-center border-b border-gray-200/50 dark:border-gray-700/50 pb-2">
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Ringkasan Ancaman</h2>
-            <!-- Tombol Hide Kanan -->
-            <button id="hideRightBtn" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg" title="Sembunyikan Panel">
+            <button id="hideRightBtn" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
             </button>
         </div>
@@ -131,7 +127,7 @@
                 <div class="text-[10px] text-gray-500 font-bold uppercase">Titik Tampil</div>
                 <div id="stat-total" class="text-2xl font-black text-brand-600 dark:text-brand-400">0</div>
             </div>
-            <div id="cardMultiRisk" class="bg-rose-50/50 dark:bg-rose-900/20 p-3 rounded-2xl border border-rose-200/50 dark:border-rose-900/30 text-center relative overflow-hidden cursor-pointer hover:scale-105 transition-transform" title="Klik untuk filter Multi-Risiko">
+            <div id="cardMultiRisk" class="bg-rose-50/50 dark:bg-rose-900/20 p-3 rounded-2xl border border-rose-200/50 dark:border-rose-900/30 text-center relative overflow-hidden cursor-pointer hover:scale-105 transition-transform">
                 <div class="absolute -right-2 -top-2 w-10 h-10 bg-rose-500/20 rounded-full blur-xl"></div>
                 <div class="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase relative z-10">Multi-Risiko</div>
                 <div id="stat-multi" class="text-2xl font-black text-rose-600 dark:text-rose-400 relative z-10">0</div>
@@ -145,8 +141,7 @@
         </div>
     </section>
 
-    <!-- Tombol Unhide Panel Kanan (Muncul pas panel kanan di-hide) -->
-    <button id="showRightBtn" class="hidden absolute top-24 right-6 z-[400] glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-2xl shadow-xl transition-all" title="Buka Statistik">
+    <button id="showRightBtn" class="hidden absolute top-24 right-6 z-[400] glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-2xl shadow-xl transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
     </button>
 
@@ -193,7 +188,10 @@
     <script>
         const LAYER_URL = "https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0";
         
-        const map = L.map('map', { zoomControl: false }).setView([-6.8, 107.4], 9);
+        // PENTING: closePopupOnClick diset false agar popup tidak hilang saat map digeser
+        const map = L.map('map', { zoomControl: false, closePopupOnClick: false }).setView([-6.8, 107.4], 9);
+        window.map = map; // Export ke global window agar button onClick di HTML popup bisa jalan
+        
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         const lightBasemap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
@@ -228,22 +226,38 @@
         }
         function checkRisk(val) { return val && (val.toLowerCase() === 'yes' || val === 1 || val === '1'); }
 
-        function getRiskProfile(p) {
+        // Fungsi penentuan warna di-upgrade untuk memperhitungkan filter aktif
+        function getRiskProfile(p, activeFilter = 'all') {
             let activeRisks = riskTypes.filter(rt => checkRisk(p[rt.id]));
             let riskCount = activeRisks.length;
             
-            let hex = '#22c55e'; // Aman
+            let hex = '#22c55e'; // Aman (Hijau)
             let twClass = 'bg-green-500';
+            let strokeColor = '#ffffff'; // Garis tepi standar
+            let strokeWidth = 2;
 
             if (riskCount >= 2) {
-                hex = '#e11d48'; // Rose
-                twClass = 'bg-rose-600';
+                // Jika sedang memilih filter spesifik (bukan all/multi/aman)
+                if (activeFilter !== 'all' && activeFilter !== 'multi' && activeFilter !== 'aman') {
+                    // Warna UTAMA disamakan dengan warna filter yg dipilih biar seragam
+                    let activeFilterObj = riskTypes.find(r => r.id === activeFilter);
+                    hex = activeFilterObj.hex;
+                    twClass = activeFilterObj.tw;
+                    
+                    // Garis tepinya dibikin Merah (Rose) untuk kasih tau ini Multi-Risiko
+                    strokeColor = '#e11d48'; 
+                    strokeWidth = 3.5; 
+                } else {
+                    // Jika di mode All / Multi, tetep pakai warna merah default multi-risiko
+                    hex = '#e11d48'; 
+                    twClass = 'bg-rose-600';
+                }
             } else if (riskCount === 1) {
                 hex = activeRisks[0].hex;
                 twClass = activeRisks[0].tw;
             }
 
-            return { activeRisks, riskCount, hex, twClass };
+            return { activeRisks, riskCount, hex, twClass, strokeColor, strokeWidth };
         }
 
         function buildFilters() {
@@ -278,6 +292,14 @@
                     
                     currentFilter = target.dataset.filter;
                     applyFilters();
+
+                    // Tampilkan atau sembunyikan Hint Legend (Tips Titik Merah)
+                    const hintDiv = document.getElementById('filterHint');
+                    if (currentFilter !== 'all' && currentFilter !== 'aman' && currentFilter !== 'multi') {
+                        hintDiv.classList.remove('hidden');
+                    } else {
+                        hintDiv.classList.add('hidden');
+                    }
                 });
             });
         }
@@ -306,7 +328,7 @@
                 const matchText = (p.jembatan || '').toLowerCase().includes(searchVal) || (p.ruas || '').toLowerCase().includes(searchVal);
                 let matchLayer = true;
                 if (currentFilter !== 'all') {
-                    const profile = getRiskProfile(p);
+                    const profile = getRiskProfile(p, 'all'); // hitung profil murni untuk filter logic
                     if (currentFilter === 'multi') matchLayer = profile.riskCount >= 2;
                     else if (currentFilter === 'aman') matchLayer = profile.riskCount === 0;
                     else matchLayer = checkRisk(p[currentFilter]);
@@ -330,7 +352,7 @@
             riskTypes.forEach(rt => counts[rt.id] = 0);
 
             features.forEach(f => {
-                const profile = getRiskProfile(f.properties);
+                const profile = getRiskProfile(f.properties, 'all');
                 profile.activeRisks.forEach(r => counts[r.id]++);
                 if(profile.riskCount >= 2) multiRisk++; 
             });
@@ -376,12 +398,13 @@
 
             geojsonLayer = L.geoJSON(features, {
                 pointToLayer: function (feature, latlng) {
-                    const profile = getRiskProfile(feature.properties);
+                    // Panggil fungsi riskProfile DENGAN parameter currentFilter agar style update sesuai UX nomor 1
+                    const profile = getRiskProfile(feature.properties, currentFilter); 
                     const defaultStyle = {
                         radius: 6, 
                         fillColor: profile.hex, 
-                        color: "#ffffff", 
-                        weight: 2, 
+                        color: profile.strokeColor, 
+                        weight: profile.strokeWidth, 
                         opacity: 1, 
                         fillOpacity: 0.9
                     };
@@ -393,14 +416,20 @@
                     const p = feature.properties;
                     const jbt = parseJembatan(p.jembatan);
                     const objId = p.OBJECTID || p.objectid;
-                    const profile = getRiskProfile(p);
+                    const profile = getRiskProfile(p, 'all'); // Popup selalu menampilkan data murni
 
                     let riskString = profile.riskCount > 0 ? profile.activeRisks.map(r => r.name).join(', ') : 'Aman';
                     let riskBadgeColor = profile.riskCount >= 2 ? 'bg-rose-500' : (profile.riskCount === 0 ? 'bg-green-500' : profile.twClass);
                     let badgeHex = profile.riskCount === 1 ? profile.activeRisks[0].hex : '';
 
+                    // Tambahkan Tombol Close custom (Silang) di HTML pop-up
                     const popupContent = `
-                        <div class="glass bg-white/95 dark:bg-brand-950/95 w-[300px] rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50 flex flex-col">
+                        <div class="glass bg-white/95 dark:bg-brand-950/95 w-[300px] rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50 flex flex-col relative">
+                            <!-- Custom Close Button -->
+                            <button onclick="window.map.closePopup()" class="absolute top-2 left-2 z-[60] w-6 h-6 bg-black/60 hover:bg-red-500 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors border border-white/20 shadow-lg cursor-pointer">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                            
                             <div id="slider-container-${objId}" class="relative w-full h-40 bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
                                 <div class="animate-pulse text-xs text-gray-500 font-bold tracking-widest">MEMUAT VISUAL...</div>
                                 <div class="absolute top-3 right-3 z-10 px-2.5 py-1 ${riskBadgeColor} text-white text-[10px] font-black rounded-full shadow-lg backdrop-blur-sm bg-opacity-90 uppercase" style="background-color: ${badgeHex}">
@@ -416,15 +445,32 @@
                             </div>
                         </div>
                     `;
-                    layer.bindPopup(popupContent);
+                    // Matikan autoPan bawaan agar tidak konflik dengan flyTo buatan kita (Solusi UX No. 3)
+                    layer.bindPopup(popupContent, { autoPan: false, closeButton: false });
                 }
             }).addTo(map);
+
+            // AUTO ZOOM TO LAYER (Fit Bounds) - Jawaban UX No. 2
+            if (features.length > 0) {
+                map.fitBounds(geojsonLayer.getBounds(), { padding: [50, 50], maxZoom: 14, animate: true, duration: 1.2 });
+            }
         }
 
         map.on('popupopen', async function(e) {
             const layer = e.popup._source;
             const p = layer.feature.properties;
             const objId = p.OBJECTID || p.objectid;
+            const latlng = layer.getLatLng();
+
+            // ANIMASI MAP PAN (Solusi UX No. 3)
+            // Kalkulasi posisi titik agak digeser biar popup tidak ketutup sidebar
+            const pt = map.project(latlng);
+            const isDesktop = window.innerWidth > 768;
+            
+            // Jika sidebar kiri tampil, geser peta agak ke kiri agar popup ke kanan (dan sebaliknya)
+            pt.x -= isDesktop ? 50 : 0; // Sesuaikan jika masih mepet
+            pt.y -= 120; // Geser ke atas supaya popup (yang tingginya 300px) terlihat full di tengah
+            map.flyTo(map.unproject(pt), map.getZoom(), { animate: true, duration: 0.8 });
 
             if(layer && layer.defaultStyle) {
                 if(selectedLayer && selectedLayer !== layer) selectedLayer.setStyle(selectedLayer.defaultStyle);
@@ -477,7 +523,7 @@
             features.forEach(f => {
                 const p = f.properties;
                 const jbt = parseJembatan(p.jembatan);
-                const profile = getRiskProfile(p);
+                const profile = getRiskProfile(p, currentFilter); // Sinkronisasi warna list sama map
                 
                 let dotClass = profile.twClass;
 
@@ -488,10 +534,10 @@
                         <div class="font-bold text-xs text-gray-800 dark:text-gray-200 truncate group-hover:text-brand-600 dark:group-hover:text-brand-400">${jbt.nama}</div>
                         <div class="text-[10px] text-gray-500 font-mono mt-0.5">${jbt.no}</div>
                     </div>
-                    <div class="w-2.5 h-2.5 rounded-full ${dotClass} shrink-0" style="color: ${profile.hex}; background-color: ${profile.hex}"></div>
+                    <div class="w-2.5 h-2.5 rounded-full ${dotClass} shrink-0 border border-white" style="background-color: ${profile.hex}; border-color: ${profile.strokeColor}; border-width: ${profile.strokeWidth > 2 ? '2px' : '0'}"></div>
                 `;
                 item.addEventListener('click', () => {
-                    map.flyTo([f.geometry.coordinates[1], f.geometry.coordinates[0]], 16, { duration: 1.5 });
+                    // Cukup open popup, logika kamera center sudah otomatis diurus di map.on('popupopen')
                     geojsonLayer.eachLayer(layer => { if ((layer.feature.properties.OBJECTID || layer.feature.properties.objectid) === (p.OBJECTID || p.objectid)) layer.openPopup(); });
                 });
                 listDiv.appendChild(item);
@@ -505,7 +551,7 @@
             features.forEach(f => {
                 const p = f.properties;
                 const jbt = parseJembatan(p.jembatan);
-                const profile = getRiskProfile(p);
+                const profile = getRiskProfile(p, 'all'); 
                 
                 let badgesHTML = profile.activeRisks.map(r => `<span class="px-2 py-1 text-white text-[10px] rounded-full mr-1 inline-block mb-1" style="background-color: ${r.hex}">${r.name}</span>`).join('');
                 if(profile.riskCount === 0) badgesHTML = `<span class="px-2 py-1 bg-green-500 text-white text-[10px] rounded-full inline-block mb-1">Aman</span>`;
@@ -522,7 +568,6 @@
             });
         }
 
-        // LOGIKA TOMBOL HIDE & SHOW PANEL KIRI & KANAN
         const leftSidebar = document.getElementById('leftSidebar');
         const rightPanel = document.getElementById('rightPanel');
         const hideLeftBtn = document.getElementById('hideLeftBtn');
@@ -550,6 +595,7 @@
 
         document.getElementById('resetViewBtn').addEventListener('click', () => {
             map.setView([-6.8, 107.4], 9, { animate: true, duration: 1 });
+            document.querySelector('[data-filter="all"]').click(); // Reset filter sekalian
         });
 
         document.getElementById('cardMultiRisk').addEventListener('click', () => {
@@ -575,7 +621,7 @@
             activeFilteredFeatures.forEach(f => {
                 const p = f.properties;
                 const jbt = parseJembatan(p.jembatan);
-                const profile = getRiskProfile(p);
+                const profile = getRiskProfile(p, 'all');
                 const risks = profile.activeRisks.map(r => r.name).join('; ');
                 csvContent += `"${jbt.no}","${jbt.nama}","${p.ruas || '-'}","${risks || 'Aman'}"\n`;
             });
