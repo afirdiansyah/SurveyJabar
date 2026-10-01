@@ -189,7 +189,7 @@
         const LAYER_URL = "https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0";
         
         // PENTING: closePopupOnClick diset false agar popup tidak hilang saat map digeser
-        const map = L.map('map', { zoomControl: false, closePopupOnClick: false }).setView([-6.8, 107.4], 7.5);
+        const map = L.map('map', { zoomControl: false, closePopupOnClick: false }).setView([-6.8, 107.4], 8);
         window.map = map; // Export ke global window agar button onClick di HTML popup bisa jalan
         
         L.control.zoom({ position: 'bottomright' }).addTo(map);
