@@ -352,10 +352,16 @@
         }
 
         function applyFilters() {
-            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
             activeFilteredFeatures = globalFeatures.filter(f => {
                 const p = f.properties;
-                const matchText = (p.jembatan || '').toLowerCase().includes(searchVal) || (p.ruas || '').toLowerCase().includes(searchVal);
+                const jbt = parseJembatan(p.jembatan);
+                
+                // Cek pencocokan pada Nama Jembatan, Nomor Jembatan, maupun Nama Ruas
+                const matchText = (jbt.nama || '').toLowerCase().includes(searchVal) || 
+                                  (jbt.no || '').toLowerCase().includes(searchVal) || 
+                                  (p.ruas || '').toLowerCase().includes(searchVal);
+                
                 let matchLayer = true;
                 if (currentFilter !== 'all') {
                     const profile = getRiskProfile(p, 'all'); 
@@ -368,8 +374,6 @@
             
             updateDashboard(activeFilteredFeatures);
 
-            // AUTO ZOOM KE SEBARAN TITIK FILTER:
-            // Jika ada hasil data yang cocok setelah difilter, arahkan kamera peta mencakup semua titik tersebut
             if (geojsonLayer && activeFilteredFeatures.length > 0) {
                 const bounds = geojsonLayer.getBounds();
                 if (bounds.isValid()) {
@@ -377,6 +381,7 @@
                 }
             }
         }
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
 
         function updateDashboard(features) {
             renderMap(features);
