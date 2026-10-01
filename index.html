@@ -40,8 +40,6 @@
         .leaflet-popup-tip-container { display: none; }
         .leaflet-popup-content { margin: 0 !important; width: 300px !important; }
 
-        path.leaflet-interactive { transition: stroke-width 0.3s ease, stroke 0.3s ease, fill-opacity 0.3s ease; }
-
         #leftSidebar.hidden-panel { transform: translateX(-110%); }
         #rightPanel.hidden-panel { transform: translateX(110%); }
         
@@ -211,6 +209,7 @@
         let selectedLayer = null;
         let activeFilteredFeatures = [];
 
+        // Brainstorming Ikon SVG & Warna Khas Masing-Masing Risiko
         const riskTypes = [
             { 
                 id: 'banjir', name: 'Banjir', hex: '#1D4ED8', tw: 'bg-blue-700',
@@ -226,7 +225,7 @@
             },
             { 
                 id: 'cuacaekstrim', name: 'Cuaca Ekstrim', hex: '#7C3AED', tw: 'bg-purple-600',
-                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>'
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>'
             },
             { 
                 id: 'odol_bebanberlebih', name: 'ODOL (Beban Berlebih)', hex: '#EA580C', tw: 'bg-orange-600',
@@ -265,31 +264,30 @@
             let twClass = 'bg-green-600';
             let strokeColor = '#ffffff'; 
             let strokeWidth = 2;
+            let svgIcon = '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>';
 
             if (riskCount >= 2) {
                 strokeColor = '#FFFFFF'; 
                 strokeWidth = 3; 
                 hex = '#EF4444';
                 twClass = 'bg-red-500';
+                svgIcon = '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>';
 
                 if (activeFilter !== 'all' && activeFilter !== 'multi' && activeFilter !== 'aman') {
                     let activeFilterObj = riskTypes.find(r => r.id === activeFilter);
                     if (activeFilterObj) {
                         hex = activeFilterObj.hex;
                         twClass = activeFilterObj.tw;
+                        svgIcon = activeFilterObj.svgIcon;
                     }
                 }
             } else if (riskCount === 1) {
                 hex = activeRisks[0].hex;
                 twClass = activeRisks[0].tw;
+                svgIcon = activeRisks[0].svgIcon;
             }
 
-            return { activeRisks, riskCount, hex, twClass, strokeColor, strokeWidth };
-        }
-
-        function getCircledNumber(n) {
-            const symbols = ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
-            return symbols[n] || `(${n})`;
+            return { activeRisks, riskCount, hex, twClass, strokeColor, strokeWidth, svgIcon };
         }
 
         function buildFilters() {
@@ -432,7 +430,7 @@
                     const profile = getRiskProfile(feature.properties, currentFilter); 
                     
                     if (profile.riskCount >= 2 && currentFilter === 'all') {
-                        const badgeNum = getCircledNumber(profile.riskCount);
+                        // Multi-Risiko Marker dengan Badge Angka
                         const customHtml = `
                             <div class="relative flex items-center justify-center w-7 h-7 bg-red-600 rounded-full border-2 border-white shadow-lg text-white">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -449,17 +447,21 @@
                         m.defaultStyle = { isCustomIcon: true };
                         return m;
                     } else {
-                        const defaultStyle = {
-                            radius: 6, 
-                            fillColor: profile.hex, 
-                            color: profile.strokeColor, 
-                            weight: profile.strokeWidth, 
-                            opacity: 1, 
-                            fillOpacity: 0.9
-                        };
-                        const marker = L.circleMarker(latlng, defaultStyle);
-                        marker.defaultStyle = defaultStyle; 
-                        return marker;
+                        // Risiko Tunggal / Aman dengan Ikon SVG & Warna Khas masing-masing
+                        const customHtml = `
+                            <div class="flex items-center justify-center w-6 h-6 rounded-full border-2 border-white shadow-md" style="background-color: ${profile.hex};">
+                                ${profile.svgIcon}
+                            </div>
+                        `;
+                        const customIcon = L.divIcon({
+                            className: 'custom-risk-marker',
+                            html: customHtml,
+                            iconSize: [24, 24],
+                            iconAnchor: [12, 12]
+                        });
+                        const m = L.marker(latlng, { icon: customIcon });
+                        m.defaultStyle = { isCustomIcon: true, hex: profile.hex };
+                        return m;
                     }
                 },
                 onEachFeature: function (feature, layer) {
@@ -518,7 +520,13 @@
                             </div>
                         </div>
                     `;
-                    layer.bindPopup(popupContent, { autoPan: false, closeButton: false });
+                    
+                    // autoPan diaktifkan agar Leaflet otomatis menyesuaikan ruang kosong di layar
+                    layer.bindPopup(popupContent, { 
+                        autoPan: true, 
+                        autoPanPadding: [50, 50],
+                        closeButton: false 
+                    });
                 }
             }).addTo(map);
 
@@ -531,42 +539,6 @@
             const layer = e.popup._source;
             const p = layer.feature.properties;
             const objId = p.OBJECTID || p.objectid;
-            const latlng = layer.getLatLng();
-
-            const zoom = map.getZoom();
-            const pt = map.project(latlng, zoom);
-            
-            const isDesktop = window.innerWidth > 768;
-            const sidebar = document.getElementById('leftSidebar');
-            const isSidebarOpen = isDesktop && !sidebar.classList.contains('hidden-panel');
-            
-            const table = document.getElementById('tableContainer');
-            const isTableOpen = !table.classList.contains('translate-y-[150%]');
-            
-            if (isSidebarOpen) {
-                pt.x -= 140; 
-            }
-            
-            if (isTableOpen) {
-                pt.y += 150; 
-            } else {
-                pt.y -= 20; 
-            }
-
-            map.flyTo(map.unproject(pt, zoom), zoom, { animate: true, duration: 0.6 });
-
-            if(layer && layer.defaultStyle) {
-                if(selectedLayer && selectedLayer !== layer) {
-                    if(!selectedLayer.defaultStyle.isCustomIcon) {
-                        selectedLayer.setStyle(selectedLayer.defaultStyle);
-                    }
-                }
-                selectedLayer = layer;
-                if(!layer.defaultStyle.isCustomIcon) {
-                    layer.setStyle({ radius: 11, weight: 4, color: '#fbbf24', fillOpacity: 1 });
-                    layer.bringToFront();
-                }
-            }
 
             const container = document.getElementById(`slider-container-${objId}`);
             if (!container || container.getAttribute('data-loaded') === 'true') return;
@@ -593,14 +565,6 @@
             } catch (error) { container.innerHTML = '<span class="text-red-500 text-xs font-bold">Gagal memuat visual</span>'; }
         });
 
-        map.on('popupclose', function(e) {
-            const layer = e.popup._source;
-            if(layer && layer.defaultStyle && !layer.defaultStyle.isCustomIcon) { 
-                layer.setStyle(layer.defaultStyle); 
-                if(selectedLayer === layer) selectedLayer = null; 
-            }
-        });
-
         window.slidePhoto = function(objId, direction, totalPhotos) {
             if (window.sliderState[objId] === undefined) window.sliderState[objId] = 0;
             window.sliderState[objId] = (window.sliderState[objId] + direction + totalPhotos) % totalPhotos;
@@ -625,7 +589,7 @@
                         <div class="font-bold text-xs text-gray-800 dark:text-gray-200 truncate group-hover:text-brand-600 dark:group-hover:text-brand-400">${jbt.nama}</div>
                         <div class="text-[10px] text-gray-500 font-mono mt-0.5">${jbt.no}</div>
                     </div>
-                    <div class="w-2.5 h-2.5 rounded-full ${dotClass} shrink-0 border border-white" style="background-color: ${profile.hex}; border-color: ${profile.strokeColor}; border-width: ${profile.strokeWidth > 2 ? '2px' : '0'}"></div>
+                    <div class="w-2.5 h-2.5 rounded-full ${dotClass} shrink-0 border border-white" style="background-color: ${profile.hex};"></div>
                 `;
                 item.addEventListener('click', () => {
                     geojsonLayer.eachLayer(layer => { if ((layer.feature.properties.OBJECTID || layer.feature.properties.objectid) === (p.OBJECTID || p.objectid)) layer.openPopup(); });
@@ -727,19 +691,9 @@
         const tableContainer = document.getElementById('tableContainer');
         document.getElementById('toggleTableBtn').addEventListener('click', () => {
             tableContainer.classList.remove('translate-y-[150%]');
-            if (map.hasEventListeners('popupopen')) {
-                const activePopup = map._popup;
-                if (activePopup && activePopup._source) {
-                    activePopup._source.openPopup();
-                }
-            }
         });
         document.getElementById('closeTableBtn').addEventListener('click', () => {
             tableContainer.classList.add('translate-y-[150%]');
-            const activePopup = map._popup;
-            if (activePopup && activePopup._source) {
-                activePopup._source.openPopup();
-            }
         });
 
         document.getElementById('themeToggle').addEventListener('click', () => {
