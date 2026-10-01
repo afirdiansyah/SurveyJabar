@@ -232,19 +232,24 @@
             
             let hex = '#22c55e'; // Aman (Hijau)
             let twClass = 'bg-green-500';
-            let strokeColor = '#ffffff'; // Garis tepi standar
+            let strokeColor = '#ffffff'; // Garis tepi standar putih
             let strokeWidth = 2;
 
             if (riskCount >= 2) {
+                // Border SELALU merah terang tebal untuk Multi-Risiko di filter manapun
+                strokeColor = '#e11d48'; 
+                strokeWidth = 3.5; 
+
                 if (activeFilter !== 'all' && activeFilter !== 'multi' && activeFilter !== 'aman') {
+                    // Kalau filter spesifik (misal: Banjir), warna dalemnya ikut warna bencana
                     let activeFilterObj = riskTypes.find(r => r.id === activeFilter);
                     hex = activeFilterObj.hex;
                     twClass = activeFilterObj.tw;
-                    strokeColor = '#e11d48'; 
-                    strokeWidth = 3.5; 
                 } else {
-                    hex = '#e11d48'; 
-                    twClass = 'bg-rose-600';
+                    // Kalau filter "Semua" atau "Multi", warna dalemnya dibikin gelap (Dark Red) 
+                    // Biar border merah terangnya kelihatan menyala
+                    hex = '#4c0519'; 
+                    twClass = 'bg-rose-900';
                 }
             } else if (riskCount === 1) {
                 hex = activeRisks[0].hex;
@@ -253,7 +258,6 @@
 
             return { activeRisks, riskCount, hex, twClass, strokeColor, strokeWidth };
         }
-
         function buildFilters() {
             const container = document.getElementById('filterContainer');
             let html = `
