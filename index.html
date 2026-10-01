@@ -504,11 +504,17 @@
                     const objId = p.OBJECTID || p.objectid;
                     const profile = getRiskProfile(p, 'all'); 
 
+                    // TAMBAHKAN EVENT KLIK DI SINI AGAR SAAT MARKER DIKLIK LANGSUNG ZOOM & BUKA POPUP
+                    layer.on('click', function(e) {
+                        const latlng = layer.getLatLng();
+                        map.setView(latlng, 15, { animate: true, duration: 0.8 });
+                    });
+
                     let statusBoxClass = "bg-green-500/10 text-green-500 border-green-500/20";
                     let statusText = "🟢 AMAN (Tanpa Ancaman)";
                     if (profile.riskCount >= 2) {
                         statusBoxClass = "bg-rose-500/10 text-rose-500 border-rose-500/20";
-                        statusText = `⚠️ MULTI RISIKO (${profile.riskCount} Ancaman)`;
+                        statusText = `⚠️️ MULTI RISIKO (${profile.riskCount} Ancaman)`;
                     } else if (profile.riskCount === 1) {
                         statusBoxClass = "bg-amber-500/10 text-amber-500 border-amber-500/20";
                         statusText = `⚡ RISIKO TUNGGAL (${profile.activeRisks[0].name})`;
@@ -557,6 +563,8 @@
                     
                     layer.bindPopup(popupContent, { autoPan: true, autoPanPadding: [50, 50], closeButton: false });
                 }
+                  
+                            
             }).addTo(map);
 
             if (features.length > 0 && !map._zoomAnimated) {
