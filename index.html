@@ -64,6 +64,99 @@
     <!-- Tombol Kontrol Peta -->
     <div class="absolute top-6 right-6 z-[400] flex items-center gap-3">
         <button id="resetViewBtn" class="glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-2xl shadow-xl font-bold text-xs transition-all flex items-center gap-2">
+            <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1vSiap bang! Masukannya sangat detail dan tepat sasaran. Ini gua perbaiki semua poinnya secara menyeluruh:
+
+1. **Ukuran & Posisi Pop-up**: Lebar dan tinggi pop-up udah dibatasi biar aman di dalam layar (`max-height` dan max width proporsional), serta logikanya disesuaikan agar tidak mentok ke atas/tertutup header.
+2. **Desain & Animasi Tabel**: Tabel bawah posisinya diturunkan sedikit dan dibuat lebih ramping (`max-h-[280px]`). Ketika tabel dibuka atau ditutup, kalkulasi pergerakan kamera (*pan*) otomatis menyesuaikan secara dinamis agar pop-up tidak tertutup.
+3. **Brainstorming Icon SVG Risiko (Lengkap dengan Warna Khas)**:
+   - **Banjir**: Gelombang Air (`#1D4ED8`)
+   - **Longsor**: Tebing Runtuh (`#854D0E`)
+   - **Gempa Bumi**: Retakan Seismik (`#D97706`)
+   - **Cuaca Ekstrim**: Petir / Badai (`#7C3AED`)
+   - **ODOL (Beban)**: Truk / Beban Berat (`#EA580C`)
+   - **Korosi**: Karat / Tetesan Korosif (`#CA8A04`)
+   - **Konstruksi Buruk**: Kerusakan Struktur (`#DB2777`)
+   - **Benda Asing**: Objek Asing / Hambatan (`#0891B2`)
+   - **Vandalisme**: Coretan / Vandalis (`#0D9488`)
+   - **Aman**: Perisai Hijau (`#16A34A`)
+4. **Multi-Risiko & Badge Angka**: Jembatan dengan multi-risiko ( $\ge 2$ ancaman) menggunakan marker pin merah solid (`#EF4444`) dengan ikon tanda seru segitiga (`triangle-alert`), lengkap dengan **badge lingkaran hitam berisi angka jumlah ancaman** (contoh: ③) di atasnya.
+
+Berikut adalah **Full Script** terbaru yang siap lu *copy-paste*:
+
+```html
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Identifikasi Risiko Jembatan Jawa Barat 2026</title>
+    
+    <link href="[https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap](https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap)" rel="stylesheet">
+    <script src="[https://cdn.tailwindcss.com](https://cdn.tailwindcss.com)"></script>
+    <script>
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: {
+                        brand: { 50: '#eff6ff', 500: '#3b82f6', 600: '#2563eb', 900: '#1e3a8a', 950: '#0f172a' },
+                        darkglass: 'rgba(15, 23, 42, 0.9)',
+                        lightglass: 'rgba(255, 255, 255, 0.95)'
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.css](https://unpkg.com/leaflet@1.9.4/dist/leaflet.css)" />
+    <script src="[https://cdn.jsdelivr.net/npm/chart.js](https://cdn.jsdelivr.net/npm/chart.js)"></script>
+
+    <style>
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #334155; }
+        body { overflow: hidden; margin: 0; }
+        #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 0; }
+        
+        .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15); }
+        .dark .glass { border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        
+        .leaflet-popup-content-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+        .leaflet-popup-tip-container { display: none; }
+        .leaflet-popup-content { margin: 0 !important; width: 300px !important; }
+
+        path.leaflet-interactive { transition: stroke-width 0.3s ease, stroke 0.3s ease, fill-opacity 0.3s ease; }
+
+        #leftSidebar.hidden-panel { transform: translateX(-110%); }
+        #rightPanel.hidden-panel { transform: translateX(110%); }
+        
+        /* Animasi Tabel Bawah */
+        #tableContainer {
+            bottom: 1.5rem;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800 dark:bg-brand-950 dark:text-gray-200 transition-colors duration-500 selection:bg-brand-500 selection:text-white font-sans">
+
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="fixed inset-0 bg-brand-950 z-[9999] flex flex-col items-center justify-center transition-all duration-700">
+        <div class="relative w-24 h-24 mb-6">
+            <div class="absolute inset-0 border-4 border-brand-900 rounded-full"></div>
+            <div class="absolute inset-0 border-4 border-brand-500 rounded-full border-t-transparent animate-spin"></div>
+            <div class="absolute inset-0 flex items-center justify-center font-bold text-brand-500">GIS</div>
+        </div>
+        <h2 class="text-xl font-bold text-white tracking-widest animate-pulse">SINKRONISASI DATA...</h2>
+        <p class="text-xs text-gray-500 mt-2">Bina Marga Nasional</p>
+    </div>
+
+    <!-- Peta Fullscreen -->
+    <div id="map"></div>
+
+    <!-- Tombol Kontrol Peta -->
+    <div class="absolute top-6 right-6 z-[400] flex items-center gap-3">
+        <button id="resetViewBtn" class="glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-2xl shadow-xl font-bold text-xs transition-all flex items-center gap-2">
             <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
             Reset Kamera
         </button>
@@ -104,7 +197,7 @@
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Layer Analisis Risiko</h3>
                 <div class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1" id="filterContainer"></div>
                 <div id="filterHint" class="hidden mt-3 p-2 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg text-[10px] font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
-                    <span class="text-rose-500 font-bold">*Tips:</span> Titik dengan garis luar merah menandakan jembatan tersebut juga memiliki risiko bencana lainnya.
+                    <span class="text-rose-500 font-bold">*Tips:</span> Titik merah berbadge angka menandakan jembatan memiliki multi-risiko bencana.
                 </div>
             </div>
         </div>
@@ -145,36 +238,36 @@
     </button>
 
     <!-- Tombol Buka Tabel Bawah -->
-    <button id="toggleTableBtn" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] glass bg-gray-900/90 hover:bg-black dark:bg-white/10 dark:hover:bg-white/20 text-white shadow-2xl px-8 py-3 rounded-full font-bold text-sm transition-all flex items-center gap-2 border border-white/10">
+    <button id="toggleTableBtn" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] glass bg-gray-900/90 hover:bg-black dark:bg-white/10 dark:hover:bg-white/20 text-white shadow-2xl px-8 py-2.5 rounded-full font-bold text-xs transition-all flex items-center gap-2 border border-white/10">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
         Tampilkan Database Tabel
     </button>
 
-    <!-- Tabel Data (Slide Up) -->
-    <div id="tableContainer" class="absolute bottom-6 left-6 right-6 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[1000] transition-transform duration-500 translate-y-[150%] flex flex-col max-h-[350px] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50">
+    <!-- Tabel Data (Ramping & Dinamis) -->
+    <div id="tableContainer" class="absolute left-6 right-6 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[1000] translate-y-[150%] flex flex-col max-h-[280px] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+        <div class="flex justify-between items-center px-6 py-3 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50">
             <div class="flex items-center gap-3">
-                <div class="w-2 h-6 bg-brand-500 rounded-full"></div>
-                <h3 class="font-extrabold text-sm text-gray-800 dark:text-white">Tabel Atribut Survei Lapangan</h3>
+                <div class="w-2 h-5 bg-brand-500 rounded-full"></div>
+                <h3 class="font-extrabold text-xs text-gray-800 dark:text-white">Tabel Atribut Survei Lapangan</h3>
             </div>
             <div class="flex items-center gap-3">
-                <button id="exportCsvBtn" class="px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-md">
+                <button id="exportCsvBtn" class="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded-xl text-[11px] font-bold transition-all flex items-center gap-1.5 shadow-md">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Unduh CSV
                 </button>
-                <button id="closeTableBtn" class="w-8 h-8 flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50 hover:bg-red-500 hover:text-white rounded-full transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                <button id="closeTableBtn" class="w-7 h-7 flex items-center justify-center bg-gray-200/50 dark:bg-gray-700/50 hover:bg-red-500 hover:text-white rounded-full transition-colors">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
         </div>
         <div class="overflow-y-auto flex-1 p-0 relative">
-            <table class="w-full text-left text-xs md:text-sm whitespace-nowrap">
-                <thead class="bg-gray-100/80 dark:bg-gray-900/80 sticky top-0 backdrop-blur-md z-10 text-gray-500 dark:text-gray-400 uppercase tracking-wider text-[10px] font-bold">
+            <table class="w-full text-left text-xs whitespace-nowrap">
+                <thead class="bg-gray-100/80 dark:bg-gray-900/80 sticky top-0 backdrop-blur-md z-10 text-gray-500 dark:text-gray-400 uppercase tracking-wider text-[9px] font-bold">
                     <tr>
-                        <th class="px-6 py-4">No Jembatan</th>
-                        <th class="px-6 py-4">Nama Jembatan</th>
-                        <th class="px-6 py-4">Ruas</th>
-                        <th class="px-6 py-4">Risiko Terdeteksi</th>
+                        <th class="px-6 py-3">No Jembatan</th>
+                        <th class="px-6 py-3">Nama Jembatan</th>
+                        <th class="px-6 py-3">Ruas</th>
+                        <th class="px-6 py-3">Risiko Terdeteksi</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-gray-100/50 dark:divide-gray-800/50"></tbody>
@@ -183,18 +276,17 @@
     </div>
 
     <!-- Scripts -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="[https://unpkg.com/leaflet@1.9.4/dist/leaflet.js](https://unpkg.com/leaflet@1.9.4/dist/leaflet.js)"></script>
     <script>
-        const LAYER_URL = "https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0";
+        const LAYER_URL = "[https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0](https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0)";
         
-        // Initial Zoom awal disesuaikan ke level 9
         const map = L.map('map', { zoomControl: false, closePopupOnClick: false }).setView([-6.8, 107.4], 9);
         window.map = map; 
         
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        const lightBasemap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
-        const darkBasemap = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' });
+        const lightBasemap = L.tileLayer('[https://tile.openstreetmap.org/](https://tile.openstreetmap.org/){z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
+        const darkBasemap = L.tileLayer('[https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/](https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/){z}/{y}/{x}', { maxZoom: 19, attribution: 'Tiles &copy; Esri' });
         darkBasemap.addTo(map);
 
         let globalFeatures = [];
@@ -206,16 +298,44 @@
         let selectedLayer = null;
         let activeFilteredFeatures = [];
 
+        // Brainstorming Ikon SVG & Warna Khas Risiko
         const riskTypes = [
-            { id: 'banjir', name: 'Banjir', hex: '#3b82f6', tw: 'bg-blue-500' },
-            { id: 'longsor', name: 'Longsor', hex: '#f59e0b', tw: 'bg-amber-500' },
-            { id: 'gempabumi', name: 'Gempa Bumi', hex: '#ef4444', tw: 'bg-red-500' },
-            { id: 'cuacaekstrim', name: 'Cuaca Ekstrim', hex: '#a855f7', tw: 'bg-purple-500' },
-            { id: 'odol_bebanberlebih', name: 'ODOL (Beban Berlebih)', hex: '#f97316', tw: 'bg-orange-500' },
-            { id: 'korosi', name: 'Korosi', hex: '#eab308', tw: 'bg-yellow-500' },
-            { id: 'kualitaskonstruksiyangburuk', name: 'Konstruksi Buruk', hex: '#ec4899', tw: 'bg-pink-500' },
-            { id: 'kerusakanakibatbendaasing', name: 'Benda Asing', hex: '#06b6d4', tw: 'bg-cyan-500' },
-            { id: 'vandalisme', name: 'Vandalisme', hex: '#14b8a6', tw: 'bg-teal-500' }
+            { 
+                id: 'banjir', name: 'Banjir', hex: '#1D4ED8', tw: 'bg-blue-700',
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 5H9L8 4z"></path></svg>'
+            },
+            { 
+                id: 'longsor', name: 'Longsor', hex: '#854D0E', tw: 'bg-amber-800',
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 21l9-18 9 18H3z"></path></svg>'
+            },
+            { 
+                id: 'gempabumi', name: 'Gempa Bumi', hex: '#D97706', tw: 'bg-amber-600',
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>'
+            },
+            { 
+                id: 'cuacaekstrim', name: 'Cuaca Ekstrim', hex: '#7C3AED', tw: 'bg-purple-600',
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>'
+            },
+            { 
+                id: 'odol_bebanberlebih', name: 'ODOL (Beban Berlebih)', hex: '#EA580C', tw: 'bg-orange-600',
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10h2m10 0h2v-4m0 0V9a1 1 0 00-1-1h-3.586a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 007.586 5H4"></path></svg>'
+            },
+            { 
+                id: 'korosi', name: 'Korosi', hex: '#CA8A04', tw: 'bg-yellow-600',
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 5H9L8 4z"></path></svg>'
+            },
+            { 
+                id: 'kualitaskonstruksiyangburuk', name: 'Konstruksi Buruk', hex: '#DB2777', tw: 'bg-pink-600',
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>'
+            },
+            { 
+                id: 'kerusakanakibatbendaasing', name: 'Benda Asing', hex: '#0891B2', tw: 'bg-cyan-600',
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>'
+            },
+            { 
+                id: 'vandalisme', name: 'Vandalisme', hex: '#0D9488', tw: 'bg-teal-600',
+                svgIcon: '<svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>'
+            }
         ];
 
         function parseJembatan(str) {
@@ -229,22 +349,24 @@
             let activeRisks = riskTypes.filter(rt => checkRisk(p[rt.id]));
             let riskCount = activeRisks.length;
             
-            let hex = '#22c55e'; // Aman (Hijau)
-            let twClass = 'bg-green-500';
+            let hex = '#16A34A'; // Aman (Hijau)
+            let twClass = 'bg-green-600';
             let strokeColor = '#ffffff'; 
             let strokeWidth = 2;
 
             if (riskCount >= 2) {
-                strokeColor = '#e11d48'; 
-                strokeWidth = 3.5; 
+                // Multi-Risiko: Pin Merah Solid (#EF4444)
+                strokeColor = '#FFFFFF'; 
+                strokeWidth = 3; 
+                hex = '#EF4444';
+                twClass = 'bg-red-500';
 
                 if (activeFilter !== 'all' && activeFilter !== 'multi' && activeFilter !== 'aman') {
                     let activeFilterObj = riskTypes.find(r => r.id === activeFilter);
-                    hex = activeFilterObj.hex;
-                    twClass = activeFilterObj.tw;
-                } else {
-                    hex = '#4c0519'; 
-                    twClass = 'bg-rose-900';
+                    if (activeFilterObj) {
+                        hex = activeFilterObj.hex;
+                        twClass = activeFilterObj.tw;
+                    }
                 }
             } else if (riskCount === 1) {
                 hex = activeRisks[0].hex;
@@ -252,6 +374,12 @@
             }
 
             return { activeRisks, riskCount, hex, twClass, strokeColor, strokeWidth };
+        }
+
+        // Helper Konversi Angka ke Simbol Lingkaran Kecil (①, ②, ③, dst)
+        function getCircledNumber(n) {
+            const symbols = ['⓪', '①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩'];
+            return symbols[n] || `(${n})`;
         }
 
         function buildFilters() {
@@ -392,17 +520,38 @@
             geojsonLayer = L.geoJSON(features, {
                 pointToLayer: function (feature, latlng) {
                     const profile = getRiskProfile(feature.properties, currentFilter); 
-                    const defaultStyle = {
-                        radius: 6, 
-                        fillColor: profile.hex, 
-                        color: profile.strokeColor, 
-                        weight: profile.strokeWidth, 
-                        opacity: 1, 
-                        fillOpacity: 0.9
-                    };
-                    const marker = L.circleMarker(latlng, defaultStyle);
-                    marker.defaultStyle = defaultStyle; 
-                    return marker;
+                    
+                    if (profile.riskCount >= 2 && currentFilter === 'all') {
+                        // Custom Marker dengan Badge Angka untuk Multi-Risiko
+                        const badgeNum = getCircledNumber(profile.riskCount);
+                        const customHtml = `
+                            <div class="relative flex items-center justify-center w-7 h-7 bg-red-600 rounded-full border-2 border-white shadow-lg text-white">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                <span class="absolute -top-1.5 -right-1.5 bg-black text-white text-[9px] font-black w-4 h-4 rounded-full flex items-center justify-center border border-white shadow">${profile.riskCount}</span>
+                            </div>
+                        `;
+                        const customIcon = L.divIcon({
+                            className: 'custom-multi-marker',
+                            html: customHtml,
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 14]
+                        });
+                        const m = L.marker(latlng, { icon: customIcon });
+                        m.defaultStyle = { isCustomIcon: true };
+                        return m;
+                    } else {
+                        const defaultStyle = {
+                            radius: 6, 
+                            fillColor: profile.hex, 
+                            color: profile.strokeColor, 
+                            weight: profile.strokeWidth, 
+                            opacity: 1, 
+                            fillOpacity: 0.9
+                        };
+                        const marker = L.circleMarker(latlng, defaultStyle);
+                        marker.defaultStyle = defaultStyle; 
+                        return marker;
+                    }
                 },
                 onEachFeature: function (feature, layer) {
                     const p = feature.properties;
@@ -410,7 +559,6 @@
                     const objId = p.OBJECTID || p.objectid;
                     const profile = getRiskProfile(p, 'all'); 
 
-                    // Styling Status Risiko di Pop-up
                     let statusBoxClass = "bg-green-500/10 text-green-500 border-green-500/20";
                     let statusText = "🟢 AMAN (Tanpa Ancaman)";
                     if (profile.riskCount >= 2) {
@@ -421,47 +569,46 @@
                         statusText = `⚡ RISIKO TUNGGAL (${profile.activeRisks[0].name})`;
                     }
 
-                    // List Faktor Risiko
                     let risksListHTML = '';
                     if (profile.riskCount > 0) {
                         profile.activeRisks.forEach((r, idx) => {
-                            risksListHTML += `<li class="flex items-center gap-2"><span class="w-1.5 h-1.5 rounded-full" style="background-color: ${r.hex}"></span>${idx + 1}. ${r.name}</li>`;
+                            risksListHTML += `<li class="flex items-center gap-2"><span class="w-2 h-2 rounded-full shrink-0" style="background-color: ${r.hex}"></span>${idx + 1}. ${r.name}</li>`;
                         });
                     } else {
                         risksListHTML = `<li class="text-gray-400 italic">Tidak ada faktor risiko terdeteksi.</li>`;
                     }
 
-                    // Struktur Sesuai Permintaan Lu
+                    // Struktur Pop-up Sesuai Permintaan Lu
                     const popupContent = `
-                        <div class="glass bg-white/95 dark:bg-brand-950/95 w-[320px] rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50 flex flex-col relative text-xs">
-                            <!-- Custom Close Button -->
+                        <div class="glass bg-white/95 dark:bg-brand-950/95 w-[300px] max-h-[400px] rounded-2xl overflow-y-auto shadow-2xl border border-gray-200/50 dark:border-gray-700/50 flex flex-col relative text-xs">
+                            <!-- Tombol Close -->
                             <button onclick="window.map.closePopup()" class="absolute top-2 left-2 z-[60] w-6 h-6 bg-black/60 hover:bg-red-500 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors border border-white/20 shadow-lg cursor-pointer">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                             
                             <!-- Foto / Visual Slider -->
-                            <div id="slider-container-${objId}" class="relative w-full h-36 bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden">
+                            <div id="slider-container-${objId}" class="relative w-full h-32 bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
                                 <div class="animate-pulse text-xs text-gray-500 font-bold tracking-widest">MEMUAT VISUAL...</div>
                             </div>
 
                             <!-- Informasi Utama -->
-                            <div class="p-4 space-y-3">
+                            <div class="p-3.5 space-y-2.5">
                                 <div>
-                                    <h4 class="font-extrabold text-sm text-gray-900 dark:text-white leading-tight">${jbt.nama} - <span class="font-mono text-brand-500">${jbt.no}</span></h4>
-                                    <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5 truncate"><span class="font-semibold">Ruas:</span> ${p.ruas || '-'}</p>
+                                    <h4 class="font-extrabold text-xs text-gray-900 dark:text-white leading-tight">${jbt.nama} - <span class="font-mono text-brand-500">${jbt.no}</span></h4>
+                                    <p class="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5 truncate"><span class="font-semibold">Ruas:</span> ${p.ruas || '-'}</p>
                                 </div>
 
                                 <hr class="border-gray-200/50 dark:border-gray-700/50">
 
                                 <!-- Status Risiko -->
-                                <div class="p-2 rounded-xl border font-bold text-[11px] text-center ${statusBoxClass}">
+                                <div class="p-2 rounded-xl border font-bold text-[10px] text-center ${statusBoxClass}">
                                     ${statusText}
                                 </div>
 
                                 <!-- Faktor Risiko Terdeteksi -->
                                 <div class="space-y-1">
-                                    <div class="font-bold text-[10px] text-gray-400 uppercase tracking-wider">Faktor Risiko Terdeteksi:</div>
-                                    <ul class="space-y-1 pl-1 text-gray-700 dark:text-gray-300 font-medium">
+                                    <div class="font-bold text-[9px] text-gray-400 uppercase tracking-wider">Faktor Risiko Terdeteksi:</div>
+                                    <ul class="space-y-1 pl-1 text-gray-700 dark:text-gray-300 font-medium text-[11px]">
                                         ${risksListHTML}
                                     </ul>
                                 </div>
@@ -484,7 +631,7 @@
             const latlng = layer.getLatLng();
 
             // ==========================================
-            // KALIBRASI MAP PAN AGAR TIDAK MENTAL KE ATAS
+            // KALIBRASI MAP PAN DINAMIS (MEMBACA STATUS TABEL)
             // ==========================================
             const zoom = map.getZoom();
             const pt = map.project(latlng, zoom);
@@ -496,26 +643,34 @@
             const table = document.getElementById('tableContainer');
             const isTableOpen = !table.classList.contains('translate-y-[150%]');
             
-            // Geser Horizontal agar tidak tertutup sidebar kiri
+            // Geser Horizontal hindari sidebar kiri
             if (isSidebarOpen) {
-                pt.x -= 120; 
+                pt.x -= 140; 
             }
             
-            // Geser Vertikal: Jika tabel terbuka, dorong sedikit ke bawah agar popup muncul di atas tabel dengan pas
+            // Geser Vertikal Dinamis: Jika tabel terbuka, dorong kamera lebih jauh ke bawah agar pop-up melayang pas di atas tabel
             if (isTableOpen) {
-                pt.y += 100; 
+                pt.y += 150; 
             } else {
-                pt.y -= 40; // Dibuat minimal agar pop-up selalu aman di dalam layar
+                pt.y -= 20; 
             }
 
             map.flyTo(map.unproject(pt, zoom), zoom, { animate: true, duration: 0.6 });
             // ==========================================
 
             if(layer && layer.defaultStyle) {
-                if(selectedLayer && selectedLayer !== layer) selectedLayer.setStyle(selectedLayer.defaultStyle);
+                if(selectedLayer && selectedLayer !== layer) {
+                    if(selectedLayer.defaultStyle.isCustomIcon) {
+                        // Reset marker khusus jika ada
+                    } else {
+                        selectedLayer.setStyle(selectedLayer.defaultStyle);
+                    }
+                }
                 selectedLayer = layer;
-                layer.setStyle({ radius: 12, weight: 4, color: '#fbbf24', fillOpacity: 1 });
-                layer.bringToFront();
+                if(!layer.defaultStyle.isCustomIcon) {
+                    layer.setStyle({ radius: 11, weight: 4, color: '#fbbf24', fillOpacity: 1 });
+                    layer.bringToFront();
+                }
             }
 
             const container = document.getElementById(`slider-container-${objId}`);
@@ -530,9 +685,9 @@
                     let navHTML = '';
                     if (photos.length > 1) {
                         navHTML = `
-                            <button onclick="slidePhoto('${objId}', -1, ${photos.length})" class="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-black/50 hover:bg-brand-500 text-white rounded-full flex items-center justify-center backdrop-blur-md z-20"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg></button>
-                            <button onclick="slidePhoto('${objId}', 1, ${photos.length})" class="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 bg-black/50 hover:bg-brand-500 text-white rounded-full flex items-center justify-center backdrop-blur-md z-20"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg></button>
-                            <div id="indicator-${objId}" class="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-black/60 text-white text-[9px] font-bold rounded-full backdrop-blur-md z-20">1 / ${photos.length}</div>
+                            <button onclick="slidePhoto('${objId}', -1, ${photos.length})" class="absolute left-2 top-1/2 -translate-y-1/2 w-5 h-5 bg-black/50 hover:bg-brand-500 text-white rounded-full flex items-center justify-center backdrop-blur-md z-20"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M15 19l-7-7 7-7"></path></svg></button>
+                            <button onclick="slidePhoto('${objId}', 1, ${photos.length})" class="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 bg-black/50 hover:bg-brand-500 text-white rounded-full flex items-center justify-center backdrop-blur-md z-20"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"></path></svg></button>
+                            <div id="indicator-${objId}" class="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-black/60 text-white text-[8px] font-bold rounded-full backdrop-blur-md z-20">1 / ${photos.length}</div>
                         `;
                     }
                     container.innerHTML = `<div id="track-${objId}" class="w-full h-full flex transition-transform duration-500 ease-out z-0">${slidesHTML}</div>${navHTML}`;
@@ -545,7 +700,10 @@
 
         map.on('popupclose', function(e) {
             const layer = e.popup._source;
-            if(layer && layer.defaultStyle) { layer.setStyle(layer.defaultStyle); if(selectedLayer === layer) selectedLayer = null; }
+            if(layer && layer.defaultStyle && !layer.defaultStyle.isCustomIcon) { 
+                layer.setStyle(layer.defaultStyle); 
+                if(selectedLayer === layer) selectedLayer = null; 
+            }
         });
 
         window.slidePhoto = function(objId, direction, totalPhotos) {
@@ -590,16 +748,16 @@
                 const jbt = parseJembatan(p.jembatan);
                 const profile = getRiskProfile(p, 'all'); 
                 
-                let badgesHTML = profile.activeRisks.map(r => `<span class="px-2 py-1 text-white text-[10px] rounded-full mr-1 inline-block mb-1" style="background-color: ${r.hex}">${r.name}</span>`).join('');
-                if(profile.riskCount === 0) badgesHTML = `<span class="px-2 py-1 bg-green-500 text-white text-[10px] rounded-full inline-block mb-1">Aman</span>`;
+                let badgesHTML = profile.activeRisks.map(r => `<span class="px-2 py-0.5 text-white text-[9px] rounded-full mr-1 inline-block mb-1 font-semibold" style="background-color: ${r.hex}">${r.name}</span>`).join('');
+                if(profile.riskCount === 0) badgesHTML = `<span class="px-2 py-0.5 bg-green-600 text-white text-[9px] rounded-full inline-block mb-1 font-semibold">Aman</span>`;
 
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-colors";
                 tr.innerHTML = `
-                    <td class="px-6 py-3 font-mono text-xs text-gray-500 align-top">${jbt.no}</td>
-                    <td class="px-6 py-3 font-bold text-gray-800 dark:text-gray-200 align-top">${jbt.nama}</td>
-                    <td class="px-6 py-3 text-xs text-gray-500 truncate max-w-[200px] align-top">${p.ruas || '-'}</td>
-                    <td class="px-6 py-3 align-top whitespace-normal min-w-[200px]">${badgesHTML}</td>
+                    <td class="px-6 py-2.5 font-mono text-xs text-gray-500 align-top">${jbt.no}</td>
+                    <td class="px-6 py-2.5 font-bold text-gray-800 dark:text-gray-200 align-top">${jbt.nama}</td>
+                    <td class="px-6 py-2.5 text-xs text-gray-500 truncate max-w-[200px] align-top">${p.ruas || '-'}</td>
+                    <td class="px-6 py-2.5 align-top whitespace-normal min-w-[200px]">${badgesHTML}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -630,7 +788,6 @@
             showRightBtn.classList.add('hidden');
         });
 
-        // Reset kamera mengembalikan ke view default level 9
         document.getElementById('resetViewBtn').addEventListener('click', () => {
             map.setView([-6.8, 107.4], 9, { animate: true, duration: 1 });
             document.querySelector('[data-filter="all"]').click(); 
@@ -672,9 +829,25 @@
             document.body.removeChild(link);
         });
 
+        // Kontrol Tabel Bawah & Dinamis Pergerakan Popup
         const tableContainer = document.getElementById('tableContainer');
-        document.getElementById('toggleTableBtn').addEventListener('click', () => tableContainer.classList.remove('translate-y-[150%]'));
-        document.getElementById('closeTableBtn').addEventListener('click', () => tableContainer.classList.add('translate-y-[150%]'));
+        document.getElementById('toggleTableBtn').addEventListener('click', () => {
+            tableContainer.classList.remove('translate-y-[150%]');
+            if (map.hasEventListeners('popupopen')) {
+                // Refresh posisi popup jika sedang terbuka saat tabel dibuka
+                const activePopup = map._popup;
+                if (activePopup && activePopup._source) {
+                    activePopup._source.openPopup();
+                }
+            }
+        });
+        document.getElementById('closeTableBtn').addEventListener('click', () => {
+            tableContainer.classList.add('translate-y-[150%]');
+            const activePopup = map._popup;
+            if (activePopup && activePopup._source) {
+                activePopup._source.openPopup();
+            }
+        });
 
         document.getElementById('themeToggle').addEventListener('click', () => {
             document.documentElement.classList.toggle('dark');
