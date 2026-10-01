@@ -188,7 +188,7 @@
     <script>
         const LAYER_URL = "https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0";
         
-        // Default zoom diubah ke 7
+        // Default zoom diatur ke 7
         const map = L.map('map', { zoomControl: false, closePopupOnClick: false }).setView([-6.8, 107.4], 7);
         window.map = map; 
         
@@ -244,7 +244,6 @@
                     hex = activeFilterObj.hex;
                     twClass = activeFilterObj.tw;
                 } else {
-                    // Warna gelap untuk multi-risiko
                     hex = '#4c0519'; 
                     twClass = 'bg-rose-900';
                 }
@@ -466,16 +465,16 @@
             const table = document.getElementById('tableContainer');
             const isTableOpen = !table.classList.contains('translate-y-[150%]');
             
-            // Geser Horizontal hindari sidebar
+            // 1. Geser Horizontal (X) dikurangi jadi 100 biar tetep dekat sama sidebar kiri
             if (isSidebarOpen) {
-                pt.x -= 220; 
+                pt.x -= 100; 
             }
             
-            // Geser Vertikal hindari Tabel
+            // 2. Geser Vertikal (Y) dipertajam biar popup ngelewatin batas atas tabel
             if (isTableOpen) {
-                pt.y += 80; 
+                pt.y += 220; // Tambah drastis ke bawah (kamera turun = marker naik)
             } else {
-                pt.y -= 160; 
+                pt.y -= 120; // Marker turun dikit biar popup nggak kepentok batas atas web
             }
 
             map.flyTo(map.unproject(pt, zoom), zoom, { animate: true, duration: 0.8 });
@@ -602,7 +601,6 @@
         });
 
         document.getElementById('resetViewBtn').addEventListener('click', () => {
-            // Reset zoom diubah ke 7
             map.setView([-6.8, 107.4], 7, { animate: true, duration: 1 });
             document.querySelector('[data-filter="all"]').click(); 
         });
