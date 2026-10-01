@@ -42,11 +42,26 @@
         .leaflet-popup-tip-container { display: none; }
         .leaflet-popup-content { margin: 0 !important; width: 300px !important; }
 
+        /* Responsive Panel Transitions */
+        #leftSidebar { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        #rightPanel { transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        @media (max-width: 768px) {
+            #leftSidebar { transform: translateX(-110%); }
+            #leftSidebar.mobile-show { transform: translateX(0); }
+            #rightPanel { transform: translateX(110%); }
+            #rightPanel.mobile-show { transform: translateX(0); }
+            #tableContainer { left: 1rem !important; right: 1rem !important; }
+        }
+
         #leftSidebar.hidden-panel { transform: translateX(-110%); }
         #rightPanel.hidden-panel { transform: translateX(110%); }
         
+        /* Tabel Desktop: di antara sidebar & panel kanan */
         #tableContainer {
             bottom: 1.5rem;
+            left: 424px;
+            right: 352px;
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
@@ -83,7 +98,7 @@
     <!-- Peta Fullscreen -->
     <div id="map"></div>
 
-    <!-- PETA MINI INSET (Jawa Barat Overview) -->
+    <!-- PETA MINI INSET (Jawa Barat Overview - Hidden di Mobile agar lega) -->
     <div class="absolute bottom-6 left-6 z-[400] w-52 h-40 glass bg-lightglass dark:bg-darkglass rounded-2xl shadow-2xl overflow-hidden hidden md:flex flex-col border border-white/20 transition-all">
         <div class="px-3 py-1.5 bg-white/50 dark:bg-gray-900/50 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
             <span class="text-[9px] font-extrabold uppercase tracking-widest text-gray-500 dark:text-gray-400">Overview • Jawa Barat</span>
@@ -92,20 +107,20 @@
         <div id="insetMap" class="w-full flex-1 bg-gray-200 dark:bg-gray-900"></div>
     </div>
 
-    <!-- Tombol Kontrol Peta -->
-    <div class="absolute top-6 right-6 z-[400] flex items-center gap-3">
-        <button id="resetViewBtn" class="glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-4 py-2.5 rounded-2xl shadow-xl font-bold text-xs transition-all flex items-center gap-2">
+    <!-- Tombol Kontrol Peta Atas Kanan -->
+    <div class="absolute top-4 right-4 md:top-6 md:right-6 z-[400] flex items-center gap-2 md:gap-3">
+        <button id="resetViewBtn" class="glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 px-3 py-2 md:px-4 md:py-2.5 rounded-2xl shadow-xl font-bold text-xs transition-all flex items-center gap-2">
             <svg class="w-4 h-4 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-            Reset Kamera
+            <span class="hidden sm:inline">Reset Kamera</span>
         </button>
-        <button id="showLeftBtn" class="hidden glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-2xl shadow-xl transition-all">
+        <button id="showLeftBtn" class="hidden glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-2.5 md:p-3 rounded-2xl shadow-xl transition-all">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
         </button>
     </div>
 
     <!-- SIDEBAR KIRI -->
-    <aside id="leftSidebar" class="absolute top-6 left-6 bottom-48 w-[380px] glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden transition-transform duration-500">
-        <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between bg-white/30 dark:bg-gray-900/30">
+    <aside id="leftSidebar" class="absolute top-4 left-4 right-4 md:right-auto md:top-6 md:left-6 bottom-32 md:bottom-48 w-auto md:w-[380px] glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden">
+        <div class="p-4 md:p-5 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between bg-white/30 dark:bg-gray-900/30">
             <div class="flex items-center gap-3">
                 <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-blue-400 flex items-center justify-center text-white shadow-md shrink-0">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
@@ -126,14 +141,14 @@
             </div>
         </div>
 
-        <div class="p-5 border-b border-gray-200/50 dark:border-gray-700/50 space-y-3">
+        <div class="p-4 md:p-5 border-b border-gray-200/50 dark:border-gray-700/50 space-y-3">
             <div class="relative">
                 <svg class="w-4 h-4 absolute left-3 top-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 <input type="text" id="searchInput" placeholder="Cari nomor/nama jembatan / ruas..." class="w-full pl-9 pr-4 py-2 bg-gray-100/50 dark:bg-gray-800/50 border border-transparent dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 text-xs text-gray-800 dark:text-gray-200 transition-all">
             </div>
             <div>
                 <h3 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">Layer Analisis Risiko</h3>
-                <div class="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1" id="filterContainer"></div>
+                <div class="flex flex-wrap gap-1.5 max-h-24 md:max-h-28 overflow-y-auto pr-1" id="filterContainer"></div>
                 <div id="filterHint" class="hidden mt-3 p-2 bg-gray-100/50 dark:bg-gray-800/50 rounded-lg text-[10px] font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
                     <span class="text-rose-500 font-bold">*Tips:</span> Titik merah berbadge angka menandakan jembatan memiliki multi-risiko bencana.
                 </div>
@@ -144,7 +159,7 @@
     </aside>
 
     <!-- PANEL KANAN -->
-    <section id="rightPanel" class="absolute top-24 right-6 w-80 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col p-5 space-y-4 transition-transform duration-500">
+    <section id="rightPanel" class="absolute top-36 right-4 left-4 md:left-auto md:top-24 md:right-6 w-auto md:w-80 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[500] flex flex-col p-4 md:p-5 space-y-3 md:space-y-4">
         <div class="flex justify-between items-center border-b border-gray-200/50 dark:border-gray-700/50 pb-2">
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Ringkasan Ancaman</h2>
             <button id="hideRightBtn" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg">
@@ -152,38 +167,38 @@
             </button>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 mb-2">
-            <div class="bg-gray-100/50 dark:bg-gray-800/50 p-3 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 text-center">
+        <div class="grid grid-cols-2 gap-3 mb-1">
+            <div class="bg-gray-100/50 dark:bg-gray-800/50 p-2.5 md:p-3 rounded-2xl border border-gray-200/50 dark:border-gray-700/50 text-center">
                 <div class="text-[10px] text-gray-500 font-bold uppercase">Titik Tampil</div>
-                <div id="stat-total" class="text-2xl font-black text-brand-600 dark:text-brand-400">0</div>
+                <div id="stat-total" class="text-xl md:text-2xl font-black text-brand-600 dark:text-brand-400">0</div>
             </div>
-            <div id="cardMultiRisk" class="bg-rose-50/50 dark:bg-rose-900/20 p-3 rounded-2xl border border-rose-200/50 dark:border-rose-900/30 text-center relative overflow-hidden cursor-pointer hover:scale-105 transition-transform">
+            <div id="cardMultiRisk" class="bg-rose-50/50 dark:bg-rose-900/20 p-2.5 md:p-3 rounded-2xl border border-rose-200/50 dark:border-rose-900/30 text-center relative overflow-hidden cursor-pointer hover:scale-105 transition-transform">
                 <div class="absolute -right-2 -top-2 w-10 h-10 bg-rose-500/20 rounded-full blur-xl"></div>
                 <div class="text-[10px] text-rose-600 dark:text-rose-400 font-bold uppercase relative z-10">Multi-Risiko</div>
-                <div id="stat-multi" class="text-2xl font-black text-rose-600 dark:text-rose-400 relative z-10">0</div>
+                <div id="stat-multi" class="text-xl md:text-2xl font-black text-rose-600 dark:text-rose-400 relative z-10">0</div>
             </div>
         </div>
-        <div class="relative w-full h-36">
+        <div class="relative w-full h-28 md:h-36">
             <canvas id="riskChart"></canvas>
         </div>
-        <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-3">
-            <div id="statList" class="space-y-2 text-[11px] font-medium max-h-36 overflow-y-auto pr-2"></div>
+        <div class="border-t border-gray-200/50 dark:border-gray-700/50 pt-2 md:pt-3">
+            <div id="statList" class="space-y-1.5 md:space-y-2 text-[11px] font-medium max-h-28 md:max-h-36 overflow-y-auto pr-2"></div>
         </div>
     </section>
 
-    <button id="showRightBtn" class="hidden absolute top-24 right-6 z-[400] glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-2xl shadow-xl transition-all">
+    <button id="showRightBtn" class="hidden absolute top-24 right-4 md:right-6 z-[400] glass bg-lightglass dark:bg-darkglass hover:bg-white dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 p-3 rounded-2xl shadow-xl transition-all">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"></path></svg>
     </button>
 
     <!-- Tombol Buka Tabel Bawah -->
-    <button id="toggleTableBtn" class="absolute bottom-6 left-1/2 -translate-x-1/2 z-[400] glass bg-gray-900/90 hover:bg-black dark:bg-white/10 dark:hover:bg-white/20 text-white shadow-2xl px-8 py-2.5 rounded-full font-bold text-xs transition-all flex items-center gap-2 border border-white/10">
+    <button id="toggleTableBtn" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-[400] glass bg-gray-900/90 hover:bg-black dark:bg-white/10 dark:hover:bg-white/20 text-white shadow-2xl px-6 md:px-8 py-2.5 rounded-full font-bold text-xs transition-all flex items-center gap-2 border border-white/10">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
         Tampilkan Database Tabel
     </button>
 
-    <!-- Tabel Data (Ramping & Dinamis) -->
-    <div id="tableContainer" class="absolute left-6 right-6 glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[1000] translate-y-[150%] flex flex-col max-h-[280px] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
-        <div class="flex justify-between items-center px-6 py-3 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50">
+    <!-- Tabel Data (Responsive & Proporsional) -->
+    <div id="tableContainer" class="absolute glass bg-lightglass dark:bg-darkglass rounded-3xl shadow-2xl z-[1000] translate-y-[150%] flex flex-col max-h-[280px] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+        <div class="flex justify-between items-center px-4 md:px-6 py-3 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50">
             <div class="flex items-center gap-3">
                 <div class="w-2 h-5 bg-brand-500 rounded-full"></div>
                 <h3 class="font-extrabold text-xs text-gray-800 dark:text-white">Tabel Atribut Survei Lapangan</h3>
@@ -202,10 +217,10 @@
             <table class="w-full text-left text-xs whitespace-nowrap">
                 <thead class="bg-gray-100/80 dark:bg-gray-900/80 sticky top-0 backdrop-blur-md z-10 text-gray-500 dark:text-gray-400 uppercase tracking-wider text-[9px] font-bold">
                     <tr>
-                        <th class="px-6 py-3">No Jembatan</th>
-                        <th class="px-6 py-3">Nama Jembatan</th>
-                        <th class="px-6 py-3">Ruas</th>
-                        <th class="px-6 py-3">Risiko Terdeteksi</th>
+                        <th class="px-4 md:px-6 py-3">No Jembatan</th>
+                        <th class="px-4 md:px-6 py-3">Nama Jembatan</th>
+                        <th class="px-4 md:px-6 py-3">Ruas</th>
+                        <th class="px-4 md:px-6 py-3">Risiko Terdeteksi</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody" class="divide-y divide-gray-100/50 dark:divide-gray-800/50"></tbody>
@@ -735,10 +750,10 @@
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-brand-50/50 dark:hover:bg-brand-900/20 transition-colors cursor-pointer";
                 tr.innerHTML = `
-                    <td class="px-6 py-2.5 font-mono text-xs text-gray-500 align-top">${jbt.no}</td>
-                    <td class="px-6 py-2.5 font-bold text-gray-800 dark:text-gray-200 align-top">${jbt.nama}</td>
-                    <td class="px-6 py-2.5 text-xs text-gray-500 truncate max-w-[200px] align-top">${p.ruas || '-'}</td>
-                    <td class="px-6 py-2.5 align-top whitespace-normal min-w-[200px]">${badgesHTML}</td>
+                    <td class="px-4 md:px-6 py-2.5 font-mono text-xs text-gray-500 align-top">${jbt.no}</td>
+                    <td class="px-4 md:px-6 py-2.5 font-bold text-gray-800 dark:text-gray-200 align-top">${jbt.nama}</td>
+                    <td class="px-4 md:px-6 py-2.5 text-xs text-gray-500 truncate max-w-[200px] align-top">${p.ruas || '-'}</td>
+                    <td class="px-4 md:px-6 py-2.5 align-top whitespace-normal min-w-[200px]">${badgesHTML}</td>
                 `;
                 tr.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -763,20 +778,36 @@
         const showRightBtn = document.getElementById('showRightBtn');
 
         hideLeftBtn.addEventListener('click', () => {
-            leftSidebar.classList.add('hidden-panel');
+            if (window.innerWidth <= 768) {
+                leftSidebar.classList.remove('mobile-show');
+            } else {
+                leftSidebar.classList.add('hidden-panel');
+            }
             showLeftBtn.classList.remove('hidden');
         });
         showLeftBtn.addEventListener('click', () => {
-            leftSidebar.classList.remove('hidden-panel');
+            if (window.innerWidth <= 768) {
+                leftSidebar.classList.add('mobile-show');
+            } else {
+                leftSidebar.classList.remove('hidden-panel');
+            }
             showLeftBtn.classList.add('hidden');
         });
 
         hideRightBtn.addEventListener('click', () => {
-            rightPanel.classList.add('hidden-panel');
+            if (window.innerWidth <= 768) {
+                rightPanel.classList.remove('mobile-show');
+            } else {
+                rightPanel.classList.add('hidden-panel');
+            }
             showRightBtn.classList.remove('hidden');
         });
         showRightBtn.addEventListener('click', () => {
-            rightPanel.classList.remove('hidden-panel');
+            if (window.innerWidth <= 768) {
+                rightPanel.classList.add('mobile-show');
+            } else {
+                rightPanel.classList.remove('hidden-panel');
+            }
             showRightBtn.classList.add('hidden');
         });
 
