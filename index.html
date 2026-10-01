@@ -365,9 +365,18 @@
                 }
                 return matchText && matchLayer;
             });
+            
             updateDashboard(activeFilteredFeatures);
+
+            // AUTO ZOOM KE SEBARAN TITIK FILTER:
+            // Jika ada hasil data yang cocok setelah difilter, arahkan kamera peta mencakup semua titik tersebut
+            if (geojsonLayer && activeFilteredFeatures.length > 0) {
+                const bounds = geojsonLayer.getBounds();
+                if (bounds.isValid()) {
+                    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14, animate: true, duration: 1.0 });
+                }
+            }
         }
-        document.getElementById('searchInput').addEventListener('input', applyFilters);
 
         function updateDashboard(features) {
             renderMap(features);
