@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Dashboard Identifikasi Risiko Jembatan Jawa Barat 2026</title>
-    
+
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -32,7 +32,7 @@
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
         .dark ::-webkit-scrollbar-thumb { background: #334155; }
-        
+
         html, body { 
             position: fixed; 
             width: 100%; 
@@ -42,25 +42,23 @@
             padding: 0;
             touch-action: manipulation;
         }
-        
+
         #map { position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 0; }
-        
+
         .glass { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.15); }
         .dark .glass { border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
-        
-        /* Popup Styling Dynamic for Portrait & Landscape */
+
+        /* Popup Styling Dynamic */
         .leaflet-popup-content-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
         .leaflet-popup-tip-container { display: none; }
-        
-        /* Default Popup Size (Portrait Mobile) */
         .leaflet-popup-content { margin: 0 !important; width: 280px !important; }
-        @media (min-width: 640px) { .leaflet-popup-content { width: 320px !important; } }
-        
-        /* LANDSCAPE SPECIFIC FIX (HP/Tab Miring) */
+        @media (min-width: 640px) { .leaflet-popup-content { width: 310px !important; } }
+
+        /* LANDSCAPE FIX */
         @media (max-height: 500px) and (orientation: landscape) {
-            .leaflet-popup-content { width: 420px !important; }
+            .leaflet-popup-content { width: 380px !important; }
             .popup-card-container { flex-direction: row !important; max-height: 80vh !important; }
-            .popup-slider-box { width: 40% !important; height: 100% !important; min-height: 140px !important; }
+            .popup-slider-box { width: 40% !important; height: auto !important; min-height: 120px !important; }
             .popup-details-box { width: 60% !important; }
         }
 
@@ -74,25 +72,25 @@
         @media (max-width: 1024px) {
             #leftSidebar {
                 top: 0; left: 0; bottom: 0;
-                width: 100%; max-width: 360px; height: 100%;
+                width: 100%; max-width: 340px; height: 100%;
                 border-radius: 0;
                 transform: translateX(-100%);
             }
             #leftSidebar.mobile-show { transform: translateX(0); }
-            
+
             #rightPanel {
                 top: 0; right: 0; bottom: 0;
-                width: 100%; max-width: 360px; height: 100%;
+                width: 100%; max-width: 340px; height: 100%;
                 border-radius: 0;
                 transform: translateX(100%);
             }
             #rightPanel.mobile-show { transform: translateX(0); }
-            
+
             #tableContainer {
                 left: 0.5rem !important;
                 right: 0.5rem !important;
                 bottom: 0.5rem !important;
-                max-height: 55vh !important;
+                max-height: 48vh !important;
                 width: auto !important;
             }
         }
@@ -107,12 +105,14 @@
 
         #leftSidebar.hidden-panel { transform: translateX(-120%); opacity: 0; pointer-events: none; }
         #rightPanel.hidden-panel { transform: translateX(120%); opacity: 0; pointer-events: none; }
-        
+
         /* Desktop Layout Boundaries */
         @media (min-width: 1025px) {
+            #leftSidebar { max-height: calc(100vh - 7rem); }
+            #rightPanel { max-height: calc(100vh - 7rem); }
             #tableContainer {
-                bottom: 1.5rem;
-                left: 410px;
+                bottom: 1rem;
+                left: 400px;
                 right: 340px;
             }
         }
@@ -150,7 +150,7 @@
     <!-- Peta Fullscreen -->
     <div id="map"></div>
 
-    <!-- PETA MINI INSET (Hidden di Landscape Sempit & Mobile) -->
+    <!-- PETA MINI INSET -->
     <div class="absolute bottom-6 left-6 z-[400] w-48 h-36 lg:w-52 lg:h-40 glass bg-lightglass dark:bg-darkglass rounded-2xl shadow-2xl overflow-hidden hidden lg:flex flex-col border border-white/20 transition-all">
         <div class="px-3 py-1.5 bg-white/50 dark:bg-gray-900/50 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
             <span class="text-[9px] font-extrabold uppercase tracking-widest text-gray-500 dark:text-gray-400">Overview • Jawa Barat</span>
@@ -178,7 +178,7 @@
     </div>
 
     <!-- SIDEBAR KIRI -->
-    <aside id="leftSidebar" class="absolute top-0 left-0 lg:top-5 lg:left-5 w-full sm:w-[360px] lg:w-[380px] h-full lg:h-[calc(100vh-2.5rem)] glass bg-lightglass dark:bg-darkglass lg:rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden">
+    <aside id="leftSidebar" class="absolute top-0 left-0 lg:top-5 lg:left-5 w-full sm:w-[340px] lg:w-[380px] h-full lg:h-auto glass bg-lightglass dark:bg-darkglass lg:rounded-3xl shadow-2xl z-[500] flex flex-col overflow-hidden">
         <div class="p-3.5 md:p-4 border-b border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between bg-white/30 dark:bg-gray-900/30">
             <div class="flex items-center gap-2.5">
                 <div class="w-8 h-8 md:w-9 md:h-9 rounded-xl bg-gradient-to-tr from-brand-600 to-blue-400 flex items-center justify-center text-white shadow-md shrink-0">
@@ -251,8 +251,8 @@
         Tampilkan Database Tabel
     </button>
 
-    <!-- Tabel Data (Responsive & Proporsional) -->
-    <div id="tableContainer" class="absolute glass bg-lightglass dark:bg-darkglass rounded-2xl lg:rounded-3xl shadow-2xl z-[1000] translate-y-[150%] flex flex-col max-h-[50vh] lg:max-h-[260px] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
+    <!-- Tabel Data -->
+    <div id="tableContainer" class="absolute glass bg-lightglass dark:bg-darkglass rounded-2xl lg:rounded-3xl shadow-2xl z-[1000] translate-y-[150%] flex flex-col max-h-[45vh] lg:max-h-[260px] border border-gray-200/50 dark:border-gray-700/50 overflow-hidden">
         <div class="flex justify-between items-center px-3.5 py-2 md:px-5 md:py-2.5 border-b border-gray-200/50 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/50">
             <div class="flex items-center gap-2">
                 <div class="w-1.5 h-4 bg-brand-500 rounded-full"></div>
@@ -287,10 +287,10 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         const LAYER_URL = "https://gisportal.binamarga.pu.go.id/arcgis/rest/services/Hosted/survey123_3d44b9d4ef1d4f14ae8e2d6bf915ccc8_results/FeatureServer/0";
-        
+
         const map = L.map('map', { zoomControl: false, closePopupOnClick: true }).setView([-6.8, 107.4], 9);
         window.map = map; 
-        
+
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         const lightBasemap = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' });
@@ -321,7 +321,7 @@
         let riskChartInstance = null;
         let activeMarkerLatLng = null;
         window.sliderState = {};
-        
+
         let currentFilter = 'all'; 
         let activeFilteredFeatures = [];
 
@@ -347,7 +347,7 @@
         function getRiskProfile(p, activeFilter = 'all') {
             let activeRisks = riskTypes.filter(rt => checkRisk(p[rt.id]));
             let riskCount = activeRisks.length;
-            
+
             let hex = '#16A34A'; 
             let twClass = 'bg-green-600';
             let svgIcon = '<svg class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>';
@@ -392,7 +392,7 @@
                         b.classList.remove('active', 'bg-gray-800', 'dark:bg-white', 'text-white', 'dark:text-gray-900', 'shadow-md');
                         if(!['all','aman','multi'].includes(b.dataset.filter)) b.style.backgroundColor = '';
                     });
-                    
+
                     const target = e.currentTarget;
                     target.classList.add('active');
                     if (target.dataset.filter === 'all') {
@@ -402,7 +402,7 @@
                         if(rt) target.style.backgroundColor = rt.hex;
                         target.classList.add('text-white');
                     }
-                    
+
                     currentFilter = target.dataset.filter;
                     applyFilters();
 
@@ -438,11 +438,11 @@
             activeFilteredFeatures = globalFeatures.filter(f => {
                 const p = f.properties;
                 const jbt = parseJembatan(p.jembatan);
-                
+
                 const matchText = (jbt.nama || '').toLowerCase().includes(searchVal) || 
                                   (jbt.no || '').toLowerCase().includes(searchVal) || 
                                   (p.ruas || '').toLowerCase().includes(searchVal);
-                
+
                 let matchLayer = true;
                 if (currentFilter !== 'all') {
                     const profile = getRiskProfile(p, 'all'); 
@@ -452,7 +452,7 @@
                 }
                 return matchText && matchLayer;
             });
-            
+
             updateDashboard(activeFilteredFeatures);
 
             if (geojsonLayer && activeFilteredFeatures.length > 0) {
@@ -503,7 +503,7 @@
             const ctx = document.getElementById('riskChart').getContext('2d');
             if (riskChartInstance) riskChartInstance.destroy();
             const isDark = document.documentElement.classList.contains('dark');
-            
+
             riskChartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -530,29 +530,51 @@
             return { size: 38, anchor: 19, icon: 'w-4 h-4' };
         }
 
-        // FUNGSI CENTERING MARKER TERHADAP POPUP SENSITIF PORTRAIT/LANDSCAPE
+        // FUNGSI UTAMA UNTUK MENGHITUNG POSISI CENTER POPUP DI ANTARA SEMUA PANELS
         function centerMapOnMarker(latlng) {
             if (!latlng) return;
             activeMarkerLatLng = latlng;
             const zoom = Math.max(map.getZoom(), 14);
             const isMobile = window.innerWidth <= 1024;
             const isLandscape = window.innerHeight < 500;
-            
-            let offsetY = 0;
+
             let offsetX = 0;
+            let offsetY = 0;
 
             if (isMobile) {
-                offsetY = isLandscape ? window.innerHeight * 0.05 : window.innerHeight * 0.18;
+                // Di HP/Tab: Geser titik ke atas agar popup berada tepat di atas tombol tabel bawah
+                offsetY = isLandscape ? window.innerHeight * 0.12 : window.innerHeight * 0.22;
             } else {
-                const isSidebarOpen = !leftSidebar.classList.contains('hidden-panel');
+                // Di Laptop/Desktop: Cari pusat area kosong antara sidebar kiri & panel kanan
+                const leftSidebar = document.getElementById('leftSidebar');
+                const rightPanel = document.getElementById('rightPanel');
+                const tableContainer = document.getElementById('tableContainer');
+
+                const isLeftOpen = !leftSidebar.classList.contains('hidden-panel');
                 const isRightOpen = !rightPanel.classList.contains('hidden-panel');
-                if (isSidebarOpen) offsetX -= 120;
-                if (isRightOpen) offsetX += 120;
+                const isTableOpen = !tableContainer.classList.contains('translate-y-[150%]');
+
+                // Geser Sumbu X (Kiri/Kanan)
+                if (isLeftOpen && !isRightOpen) {
+                    offsetX = 160; 
+                } else if (!isLeftOpen && isRightOpen) {
+                    offsetX = -140; 
+                } else if (!isLeftOpen && !isRightOpen) {
+                    offsetX = 0;
+                } else {
+                    offsetX = 20; 
+                }
+
+                // Geser Sumbu Y jika Tabel Buka
+                if (isTableOpen) {
+                    offsetY = 30;
+                }
             }
 
+            // Eksekusi pergeseran posisi peta
             const targetPoint = map.project(latlng, zoom).subtract([offsetX, offsetY]);
             const targetLatLng = map.unproject(targetPoint, zoom);
-            
+
             map.setView(targetLatLng, zoom, { animate: true, duration: 0.5 });
         }
 
@@ -563,7 +585,7 @@
                 pointToLayer: function (feature, latlng) {
                     const profile = getRiskProfile(feature.properties, currentFilter); 
                     const dyn = getDynamicMarkerSize();
-                    
+
                     if (profile.riskCount >= 2 && currentFilter === 'all') {
                         const customHtml = `
                             <div class="relative flex items-center justify-center rounded-full border border-white shadow-md text-white" style="width: ${dyn.size}px; height: ${dyn.size}px; background-color: #EF4444;">
@@ -582,7 +604,7 @@
                         return L.marker(latlng, { icon: customIcon });
                     } else {
                         const showBadge = profile.riskCount >= 2 ? `<span class="absolute -top-1 -right-1 bg-black text-white text-[8px] font-black w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white shadow-lg">${profile.riskCount}</span>` : '';
-                        
+
                         const customHtml = `
                             <div class="relative flex items-center justify-center rounded-full border border-white shadow-sm" style="width: ${dyn.size}px; height: ${dyn.size}px; background-color: ${profile.hex};">
                                 <div class="${dyn.icon} flex items-center justify-center">
@@ -609,14 +631,14 @@
                     layer.on('click', function(e) {
                         L.DomEvent.stopPropagation(e);
                         const latlng = layer.getLatLng();
-                        
+
                         if(window.innerWidth <= 1024) {
                             leftSidebar.classList.remove('mobile-show');
                             rightPanel.classList.remove('mobile-show');
                         }
 
-                        centerMapOnMarker(latlng);
                         updateInsetMarker(latlng);
+                        centerMapOnMarker(latlng);
                     });
 
                     let statusBoxClass = "bg-green-500/10 text-green-500 border-green-500/20";
@@ -643,7 +665,7 @@
                             <button onclick="window.map.closePopup()" class="absolute top-2 left-2 z-[60] w-6 h-6 bg-black/60 hover:bg-red-500 text-white rounded-full flex items-center justify-center backdrop-blur-md transition-colors border border-white/20 shadow-lg cursor-pointer">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
-                            
+
                             <div id="slider-container-${objId}" class="popup-slider-box relative w-full h-28 sm:h-32 bg-gray-200 dark:bg-gray-800 flex items-center justify-center overflow-hidden shrink-0">
                                 <div class="animate-pulse text-[10px] text-gray-500 font-bold tracking-widest">MEMUAT VISUAL...</div>
                             </div>
@@ -669,12 +691,12 @@
                             </div>
                         </div>
                     `;
-                    
+
+                    // PENTING: Matikan autoPan bawaan Leaflet agar tidak konflik dengan perhitungan posisi presisi kita
                     layer.bindPopup(popupContent, { 
-                        autoPan: true, 
-                        autoPanPadding: [15, 15], 
+                        autoPan: false, 
                         closeButton: false,
-                        keepInView: true 
+                        keepInView: false
                     });
                 }
             }).addTo(map);
@@ -693,7 +715,7 @@
         map.on('popupopen', async function(e) {
             const layer = e.popup._source;
             if (!layer || !layer.feature) return;
-            
+
             const p = layer.feature.properties;
             const objId = p.OBJECTID || p.objectid;
 
@@ -736,7 +758,7 @@
                 const p = f.properties;
                 const jbt = parseJembatan(p.jembatan);
                 const profile = getRiskProfile(p, currentFilter); 
-                
+
                 let dotClass = profile.twClass;
 
                 const item = document.createElement('div');
@@ -753,13 +775,13 @@
                     geojsonLayer.eachLayer(layer => { 
                         if ((layer.feature.properties.OBJECTID || layer.feature.properties.objectid) === (p.OBJECTID || p.objectid)) {
                             const latlng = layer.getLatLng();
-                            
+
                             if(window.innerWidth <= 1024) {
                                 leftSidebar.classList.remove('mobile-show');
                             }
-                            
-                            centerMapOnMarker(latlng);
+
                             updateInsetMarker(latlng);
+                            centerMapOnMarker(latlng);
                             layer.openPopup();
                         } 
                     });
@@ -771,12 +793,12 @@
         function renderTable(features) {
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-            
+
             features.forEach(f => {
                 const p = f.properties;
                 const jbt = parseJembatan(p.jembatan);
                 const profile = getRiskProfile(p, 'all'); 
-                
+
                 let badgesHTML = profile.activeRisks.map(r => `<span class="px-2 py-0.5 text-white text-[9px] rounded-full mr-1 inline-block mb-0.5 font-semibold" style="background-color: ${r.hex}">${r.name}</span>`).join('');
                 if(profile.riskCount === 0) badgesHTML = `<span class="px-2 py-0.5 bg-green-600 text-white text-[9px] rounded-full inline-block mb-0.5 font-semibold">Aman</span>`;
 
@@ -793,8 +815,8 @@
                     geojsonLayer.eachLayer(layer => { 
                         if ((layer.feature.properties.OBJECTID || layer.feature.properties.objectid) === (p.OBJECTID || p.objectid)) {
                             const latlng = layer.getLatLng();
-                            centerMapOnMarker(latlng);
                             updateInsetMarker(latlng);
+                            centerMapOnMarker(latlng);
                             layer.openPopup();
                         } 
                     });
@@ -815,10 +837,9 @@
             setTimeout(() => { 
                 map.invalidateSize(); 
                 if (activeMarkerLatLng) centerMapOnMarker(activeMarkerLatLng);
-            }, 350);
+            }, 300);
         }
 
-        // AUTO ADJUST SAAT PERUBAHAN ORIENTASI / RESIZE WAKTU NYATA
         window.addEventListener('resize', toggleMapResize);
         window.addEventListener('orientationchange', toggleMapResize);
 
@@ -897,9 +918,11 @@
         const tableContainer = document.getElementById('tableContainer');
         document.getElementById('toggleTableBtn').addEventListener('click', () => {
             tableContainer.classList.remove('translate-y-[150%]');
+            toggleMapResize();
         });
         document.getElementById('closeTableBtn').addEventListener('click', () => {
             tableContainer.classList.add('translate-y-[150%]');
+            toggleMapResize();
         });
 
         document.getElementById('themeToggle').addEventListener('click', () => {
